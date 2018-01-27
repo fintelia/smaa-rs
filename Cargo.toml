@@ -1,0 +1,8 @@
+[package]
+name = "gfx_smaa"
+version = "0.1.0"
+authors = ["Jonathan Behrens <fintelia@gmail.com>"]
+
+[dependencies]
+gfx = "0.17.1"
+failure = "0.1.1"
