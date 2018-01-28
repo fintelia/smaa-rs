@@ -1,0 +1,8 @@
+dist: trusty
+language: rust
+rust:
+  - nightly
+cache: cargo
+script:
+  - cargo check --all
+  - cargo test --verbose
