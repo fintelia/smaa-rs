@@ -2,7 +2,16 @@
 name = "gfx_smaa"
 version = "0.1.0"
 authors = ["Jonathan Behrens <fintelia@gmail.com>"]
+description = "A library for post process antialiasing using SMAA"
+repository = "https://github.com/fintelia/gfx_smaa"
+keywords = ["gfx", "graphics", "antialiasing", "SMAA"]
+categories = ["rendering", "game-engines"]
+license = "MIT"
 
 [dependencies]
-gfx = "0.17.1"
-failure = "0.1.1"
+gfx = "0.17"
+gfx_core = "0.8"
+failure = "0.1"
+
+[dev-dependencies]
+piston_window = "0.75"

@@ -28,10 +28,10 @@
  */
 
 
-const SEARCHTEX_WIDTH: usize = 64;
-const SEARCHTEX_HEIGHT: usize = 16;
-const SEARCHTEX_PITCH: usize = SEARCHTEX_WIDTH;
-const SEARCHTEX_SIZE: usize = (SEARCHTEX_HEIGHT * SEARCHTEX_PITCH);
+pub const SEARCHTEX_WIDTH: u16 = 64;
+pub const SEARCHTEX_HEIGHT: u16 = 16;
+pub const SEARCHTEX_PITCH: usize = SEARCHTEX_WIDTH as usize;
+pub const SEARCHTEX_SIZE: usize = (SEARCHTEX_HEIGHT as usize * SEARCHTEX_PITCH);
 
 /*
  * Stored in R8 format. Load it in the following format:
@@ -39,7 +39,7 @@ const SEARCHTEX_SIZE: usize = (SEARCHTEX_HEIGHT * SEARCHTEX_PITCH);
  *  - DX10: DXGI_FORMAT_R8_UNORM
  */
 #[cfg_attr(rustfmt, rustfmt_skip)]
-static SEARCHTEX_BYTES: [u8; SEARCHTEX_SIZE] = [
+pub static SEARCHTEX_BYTES: [u8; SEARCHTEX_SIZE] = [
     0xfe, 0xfe, 0x00, 0x7f, 0x7f, 0x00, 0x00, 0xfe, 0xfe, 0x00, 0x7f, 0x7f,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7f, 0x7f, 0x00,
     0x7f, 0x7f, 0x00, 0x00, 0x7f, 0x7f, 0x00, 0x7f, 0x7f, 0xfe, 0x7f, 0x00,

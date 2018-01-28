@@ -28,10 +28,10 @@
  */
 
 
-const AREATEX_WIDTH: usize = 160;
-const AREATEX_HEIGHT: usize = 560;
-const AREATEX_PITCH: usize = (AREATEX_WIDTH * 2);
-const AREATEX_SIZE: usize = (AREATEX_HEIGHT * AREATEX_PITCH);
+pub const AREATEX_WIDTH: u16 = 160;
+pub const AREATEX_HEIGHT: u16 = 560;
+pub const AREATEX_PITCH: usize = (AREATEX_WIDTH * 2) as usize;
+pub const AREATEX_SIZE: usize = (AREATEX_HEIGHT as usize * AREATEX_PITCH);
 
 /*
  * Stored in R8G8 format. Load it in the following format:
@@ -39,7 +39,7 @@ const AREATEX_SIZE: usize = (AREATEX_HEIGHT * AREATEX_PITCH);
  *  - DX10: DXGI_FORMAT_R8G8_UNORM
  */
 #[cfg_attr(rustfmt, rustfmt_skip)]
-static AREATEX_BYTES: [u8; AREATEX_SIZE] = [
+pub static AREATEX_BYTES: [u8; AREATEX_SIZE] = [
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00,
