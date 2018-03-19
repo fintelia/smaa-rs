@@ -14,4 +14,4 @@ gfx_core = "0.8"
 failure = "0.1"
 
 [dev-dependencies]
-piston_window = "0.75"
+piston_window = "0.77"
