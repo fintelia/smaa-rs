@@ -4,8 +4,8 @@
 //! # Example
 //!
 //! ```
-//! # extern crate piston_window;
 //! # extern crate gfx_smaa;
+//! # extern crate piston_window;
 //! # use piston_window::*;
 //! # use gfx_smaa::SmaaTarget;
 //! # fn main(){
@@ -13,15 +13,15 @@
 //! let mut window: PistonWindow = WindowSettings::new("SMAA", (640, 480)).build().unwrap();
 //!
 //! // create target
-//! let mut target = SmaaTarget::new(&mut window.factory,
-//!                                  window.output_color.clone(),
-//!                                  640, 480).unwrap();
+//! let mut target = SmaaTarget::<_>::new(&mut window.factory,
+//!                                       window.output_color.clone(),
+//!                                       640, 480).unwrap();
 //!
 //! // main loop
 //! while let Some(e) = window.next() {
 //!     window.draw_3d(&e, |window| {
 //!         // clear depth and color buffers.
-//!         window.encoder.clear_depth(&target.output_stencil(), 1.0);
+//!         window.encoder.clear_depth(&target.output_depth(), 1.0);
 //!         window.encoder.clear(&target.output_color(), [0.0, 0.0, 0.0, 1.0]);
 //!
 //!         // Render the scene.
@@ -34,7 +34,6 @@
 //! }
 //! # }
 
-#![feature(nll)]
 #![deny(missing_docs)]
 
 #[macro_use]
@@ -43,17 +42,20 @@ extern crate gfx;
 extern crate failure;
 extern crate gfx_core;
 
-use gfx::{Resources, PipelineState, Factory, RenderTarget, TextureSampler};
-use gfx::format::{R8, R8_G8, Unorm, Rgba8, Srgba8, DepthStencil};
-use gfx::handle::{RenderTargetView, DepthStencilView};
-use gfx::memory;
-use gfx::traits::FactoryExt;
-use gfx::texture::{AaMode, Kind, Mipmap, FilterMethod, WrapMode, SamplerInfo};
-use gfx_core::command;
 use failure::Error;
+use gfx::format::{
+    DepthFormat, DepthStencil, Formatted, RenderFormat, Rgba8, Srgba8, TextureFormat, Unorm, R8,
+    R8_G8,
+};
+use gfx::handle::{DepthStencilView, RenderTargetView};
+use gfx::memory;
+use gfx::texture::{AaMode, FilterMethod, Kind, Mipmap, SamplerInfo, WrapMode};
+use gfx::traits::FactoryExt;
+use gfx::{Factory, PipelineState, RenderTarget, Resources, TextureSampler};
+use gfx_core::command;
 
 mod shader;
-use shader::{ShaderSource, ShaderStage, ShaderQuality};
+use shader::{ShaderQuality, ShaderSource, ShaderStage};
 
 #[path = "../third_party/smaa/Textures/AreaTex.rs"]
 mod area_tex;
@@ -85,14 +87,26 @@ mod pipelines {
 }
 use pipelines::*;
 
+/// Which tone mapping function to use. Currently, only one such function is supported, but more may
+/// be added in the future.
+pub enum ToneMappingFunction {
+    /// Use the equation from https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve
+    AcesNormalized,
+}
+
 /// A `SmaaTarget` wraps a color and depth buffer, which it can resolve into an antialiased image
 /// using the [Subpixel Morphological Antialiasing (SMAA)](http://www.iryoku.com/smaa) algorithm.
-pub struct SmaaTarget<R: Resources> {
+pub struct SmaaTarget<R, CT = Rgba8, DT = DepthStencil>
+where
+    R: Resources,
+    CT: TextureFormat + RenderFormat + Formatted<View = [f32; 4]>,
+    DT: DepthFormat + TextureFormat,
+{
     /// Render target for actual frame data.
-    color_target: RenderTargetView<R, Srgba8>,
+    color_target: RenderTargetView<R, CT>,
 
     /// Associated depth stencil target.
-    depth_target: DepthStencilView<R, DepthStencil>,
+    depth_target: DepthStencilView<R, DT>,
 
     // Internal render targets used to compute antialiasing.
     edges_target: RenderTargetView<R, (R8_G8, Unorm)>,
@@ -109,13 +123,19 @@ pub struct SmaaTarget<R: Resources> {
     neighborhood_blending_data: neighborhood_blending_pipe::Data<R>,
 }
 
-impl<R: Resources> SmaaTarget<R> {
+impl<R, CT, DT> SmaaTarget<R, CT, DT>
+where
+    R: Resources,
+    CT: TextureFormat + RenderFormat + Formatted<View = [f32; 4]>,
+    DT: TextureFormat + DepthFormat,
+{
     /// Create a new `SmaaTarget`.
-    pub fn new<F: Factory<R>>(
+    fn new_internal<F: Factory<R>>(
         factory: &mut F,
         frame_buffer: RenderTargetView<R, Srgba8>,
         width: u16,
         height: u16,
+        tone_mapping: Option<ToneMappingFunction>,
     ) -> Result<Self, Error> {
         let depth_target = factory.create_depth_stencil(width, height)?.2;
         let (_, color_view, color_target) = factory.create_render_target(width, height)?;
@@ -127,15 +147,13 @@ impl<R: Resources> SmaaTarget<R> {
                 Kind::D2(AREATEX_WIDTH, AREATEX_HEIGHT, AaMode::Single),
                 Mipmap::Provided,
                 &[memory::cast_slice(&AREATEX_BYTES)],
-            )?
-            .1;
+            )?.1;
         let search_texture = factory
             .create_texture_immutable::<(R8, Unorm)>(
                 Kind::D2(SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, AaMode::Single),
                 Mipmap::Provided,
                 &[&SEARCHTEX_BYTES],
-            )?
-            .1;
+            )?.1;
 
         let ss = ShaderSource {
             width,
@@ -155,18 +173,22 @@ impl<R: Resources> SmaaTarget<R> {
 
         let edge_detection_shader = factory.create_shader_set(
             ss.get_stage(ShaderStage::EdgeDetectionVS).as_ref(),
-            ss.get_stage(ShaderStage::LumaEdgeDetectionPS)
-                .as_ref(),
+            ss.get_stage(ShaderStage::LumaEdgeDetectionPS).as_ref(),
         )?;
         let blending_weight_shader = factory.create_shader_set(
             ss.get_stage(ShaderStage::BlendingWeightVS).as_ref(),
             ss.get_stage(ShaderStage::BlendingWeightPS).as_ref(),
         )?;
+
+        let final_stage = match tone_mapping {
+            Some(ToneMappingFunction::AcesNormalized) => {
+                ShaderStage::NeighborhoodBlendingAcesTonemapPS
+            }
+            None => ShaderStage::NeighborhoodBlendingPS,
+        };
         let neigborhood_blending_shader = factory.create_shader_set(
-            ss.get_stage(ShaderStage::NeighborhoodBlendingVS)
-                .as_ref(),
-            ss.get_stage(ShaderStage::NeighborhoodBlendingPS)
-                .as_ref(),
+            ss.get_stage(ShaderStage::NeighborhoodBlendingVS).as_ref(),
+            ss.get_stage(final_stage).as_ref(),
         )?;
 
         Ok(Self {
@@ -210,13 +232,34 @@ impl<R: Resources> SmaaTarget<R> {
         })
     }
 
+    /// Create a new `SmaaTarget`.
+    pub fn new<F: Factory<R>>(
+        factory: &mut F,
+        frame_buffer: RenderTargetView<R, Srgba8>,
+        width: u16,
+        height: u16,
+    ) -> Result<Self, Error> {
+        Self::new_internal(factory, frame_buffer, width, height, None)
+    }
+
+    /// Create a new `SmaaTarget` that also applies tone mapping to the final image.
+    pub fn with_tone_mapping<F: Factory<R>>(
+        factory: &mut F,
+        frame_buffer: RenderTargetView<R, Srgba8>,
+        width: u16,
+        height: u16,
+        tone_mapping: ToneMappingFunction,
+    ) -> Result<Self, Error> {
+        Self::new_internal(factory, frame_buffer, width, height, Some(tone_mapping))
+    }
+
     /// Get the color buffer associated with this target.
-    pub fn output_color(&self) -> &RenderTargetView<R, Srgba8> {
+    pub fn output_color(&self) -> &RenderTargetView<R, CT> {
         &self.color_target
     }
 
     /// Get the depth/stencil buffer associated with this target.
-    pub fn output_stencil(&self) -> &DepthStencilView<R, DepthStencil> {
+    pub fn output_depth(&self) -> &DepthStencilView<R, DT> {
         &self.depth_target
     }
 

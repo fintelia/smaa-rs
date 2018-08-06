@@ -10,15 +10,15 @@ reference implementation](https://github.com/iryoku/smaa). Currently only works 
 let mut window: PistonWindow = WindowSettings::new("SMAA", (640, 480)).build().unwrap();
 
 // create target
-let mut target = SmaaTarget::new(&mut window.factory,
-                                 window.output_color.clone(),
-                                 640, 480).unwrap();
+let mut target = SmaaTarget::<_>::new(&mut window.factory,
+                                      window.output_color.clone(),
+                                      640, 480).unwrap();
 
 // main loop
 while let Some(e) = window.next() {
     window.draw_3d(&e, |window| {
         // clear depth and color buffers.
-        window.encoder.clear_depth(&target.output_stencil(), 1.0);
+        window.encoder.clear_depth(&target.output_depth(), 1.0);
         window.encoder.clear(&target.output_color(), [0.0, 0.0, 0.0, 1.0]);
 
         // Render the scene.
