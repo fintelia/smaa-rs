@@ -1,4 +1,3 @@
-
 #[allow(dead_code)]
 pub enum ShaderQuality {
     Low,
@@ -32,14 +31,14 @@ pub enum ShaderStage {
 impl ShaderStage {
     fn is_vertex_shader(&self) -> bool {
         match *self {
-            ShaderStage::EdgeDetectionVS |
-            ShaderStage::BlendingWeightVS |
-            ShaderStage::NeighborhoodBlendingVS => true,
+            ShaderStage::EdgeDetectionVS
+            | ShaderStage::BlendingWeightVS
+            | ShaderStage::NeighborhoodBlendingVS => true,
 
-            ShaderStage::LumaEdgeDetectionPS |
-            ShaderStage::BlendingWeightPS |
-            ShaderStage::NeighborhoodBlendingPS |
-            ShaderStage::NeighborhoodBlendingAcesTonemapPS => false,
+            ShaderStage::LumaEdgeDetectionPS
+            | ShaderStage::BlendingWeightPS
+            | ShaderStage::NeighborhoodBlendingPS
+            | ShaderStage::NeighborhoodBlendingAcesTonemapPS => false,
         }
     }
     fn as_str(&self) -> &'static str {
@@ -49,11 +48,8 @@ impl ShaderStage {
                  out float2 texcoord;
                  void main() {
                      if(gl_VertexID == 0) gl_Position = vec4(-1, -1, 1, 1);
-                     if(gl_VertexID == 1) gl_Position = vec4(-1,  1, 1, 1);
-        	         if(gl_VertexID == 2) gl_Position = vec4( 1,  1, 1, 1);
-        	         if(gl_VertexID == 3) gl_Position = vec4(-1, -1, 1, 1);
-        	         if(gl_VertexID == 5) gl_Position = vec4( 1,  1, 1, 1);
-        	         if(gl_VertexID == 4) gl_Position = vec4( 1, -1, 1, 1);
+                     if(gl_VertexID == 1) gl_Position = vec4(-1,  3, 1, 1);
+        	         if(gl_VertexID == 2) gl_Position = vec4( 3, -1, 1, 1);
                      texcoord = gl_Position.xy * 0.5 + vec2(0.5);
                      SMAAEdgeDetectionVS(texcoord, offset);
                  }"
@@ -64,11 +60,8 @@ impl ShaderStage {
                  out float2 texcoord;
                  void main() {
                      if(gl_VertexID == 0) gl_Position = vec4(-1, -1, 1, 1);
-                     if(gl_VertexID == 1) gl_Position = vec4(-1,  1, 1, 1);
-        	         if(gl_VertexID == 2) gl_Position = vec4( 1,  1, 1, 1);
-        	         if(gl_VertexID == 3) gl_Position = vec4(-1, -1, 1, 1);
-        	         if(gl_VertexID == 5) gl_Position = vec4( 1,  1, 1, 1);
-        	         if(gl_VertexID == 4) gl_Position = vec4( 1, -1, 1, 1);
+                     if(gl_VertexID == 1) gl_Position = vec4(-1,  3, 1, 1);
+        	         if(gl_VertexID == 2) gl_Position = vec4( 3, -1, 1, 1);
                      texcoord = gl_Position.xy * 0.5 + vec2(0.5);
                      SMAABlendingWeightCalculationVS(texcoord, pixcoord, offset);
                  }"
@@ -78,11 +71,8 @@ impl ShaderStage {
                  out float2 texcoord;
                  void main() {
                      if(gl_VertexID == 0) gl_Position = vec4(-1, -1, 1, 1);
-                     if(gl_VertexID == 1) gl_Position = vec4(-1,  1, 1, 1);
-        	         if(gl_VertexID == 2) gl_Position = vec4( 1,  1, 1, 1);
-        	         if(gl_VertexID == 3) gl_Position = vec4(-1, -1, 1, 1);
-        	         if(gl_VertexID == 5) gl_Position = vec4( 1,  1, 1, 1);
-        	         if(gl_VertexID == 4) gl_Position = vec4( 1, -1, 1, 1);
+                     if(gl_VertexID == 1) gl_Position = vec4(-1,  3, 1, 1);
+        	         if(gl_VertexID == 2) gl_Position = vec4( 3, -1, 1, 1);
                      texcoord = gl_Position.xy * 0.5 + vec2(0.5);
                      SMAANeighborhoodBlendingVS(texcoord, offset);
                  }"
@@ -160,7 +150,7 @@ impl ShaderSource {
             self.width,
             self.height,
             self.quality.as_str(),
-            if stage.is_vertex_shader() {"PS"} else {"VS"},
+            if stage.is_vertex_shader() { "PS" } else { "VS" },
             include_str!("../third_party/smaa/SMAA.hlsl"),
             stage.as_str(),
         )

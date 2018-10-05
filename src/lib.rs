@@ -267,7 +267,7 @@ where
     pub fn resolve<C: command::Buffer<R>>(&mut self, encoder: &mut gfx::Encoder<R, C>) {
         let slice = gfx::Slice {
             start: 0,
-            end: 6,
+            end: 3,
             base_vertex: 0,
             instances: None,
             buffer: gfx::IndexBuffer::Auto,
