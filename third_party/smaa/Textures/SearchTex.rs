@@ -28,10 +28,10 @@
  */
 
 
-pub const SEARCHTEX_WIDTH: u16 = 64;
-pub const SEARCHTEX_HEIGHT: u16 = 16;
+pub const SEARCHTEX_WIDTH: u32 = 64;
+pub const SEARCHTEX_HEIGHT: u32 = 16;
 pub const SEARCHTEX_PITCH: usize = SEARCHTEX_WIDTH as usize;
-pub const SEARCHTEX_SIZE: usize = (SEARCHTEX_HEIGHT as usize * SEARCHTEX_PITCH);
+pub const SEARCHTEX_SIZE: usize = SEARCHTEX_HEIGHT as usize * SEARCHTEX_PITCH;
 
 /*
  * Stored in R8 format. Load it in the following format:

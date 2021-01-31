@@ -7,11 +7,12 @@ repository = "https://github.com/fintelia/gfx_smaa"
 keywords = ["gfx", "graphics", "antialiasing", "SMAA"]
 categories = ["rendering", "game-engines"]
 license = "MIT"
+edition = "2018"
 
 [dependencies]
-gfx = "0.17"
-gfx_core = "0.8"
-failure = "0.1"
+failure = "0.1.8"
+shaderc = "0.7.1"
+wgpu = { git = "https://github.com/gfx-rs/wgpu-rs", rev = "b04cc289e84e0a754c9059a23970d8204f367cd8" }
 
 [dev-dependencies]
 piston_window = "0.77"

@@ -28,10 +28,10 @@
  */
 
 
-pub const AREATEX_WIDTH: u16 = 160;
-pub const AREATEX_HEIGHT: u16 = 560;
+pub const AREATEX_WIDTH: u32 = 160;
+pub const AREATEX_HEIGHT: u32 = 560;
 pub const AREATEX_PITCH: usize = (AREATEX_WIDTH * 2) as usize;
-pub const AREATEX_SIZE: usize = (AREATEX_HEIGHT as usize * AREATEX_PITCH);
+pub const AREATEX_SIZE: usize = AREATEX_HEIGHT as usize * AREATEX_PITCH;
 
 /*
  * Stored in R8G8 format. Load it in the following format:

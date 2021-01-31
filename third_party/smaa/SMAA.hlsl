@@ -29,11 +29,11 @@
 
 /**
  *                  _______  ___  ___       ___           ___
- *                 /       ||   \/   |     /   \         /   \
- *                |   (---- |  \  /  |    /  ^  \       /  ^  \
- *                 \   \    |  |\/|  |   /  /_\  \     /  /_\  \
- *              ----)   |   |  |  |  |  /  _____  \   /  _____  \
- *             |_______/    |__|  |__| /__/     \__\ /__/     \__\
+ *                 /       ||   \/   |     /   \         /   \ 
+ *                |   (---- |  \  /  |    /  ^  \       /  ^  \ 
+ *                 \   \    |  |\/|  |   /  /_\  \     /  /_\  \ 
+ *              ----)   |   |  |  |  |  /  _____  \   /  _____  \ 
+ *             |_______/    |__|  |__| /__/     \__\ /__/     \__\ 
  * 
  *                               E N H A N C E D
  *       S U B P I X E L   M O R P H O L O G I C A L   A N T I A L I A S I N G
@@ -557,14 +557,14 @@ SamplerState PointSampler { Filter = MIN_MAG_MIP_POINT; AddressU = Clamp; Addres
 #endif
 #endif
 #if defined(SMAA_GLSL_3) || defined(SMAA_GLSL_4)
-#define SMAATexture2D(tex) sampler2D tex
+#define SMAATexture2D(tex) texture2D tex
 #define SMAATexturePass2D(tex) tex
-#define SMAASampleLevelZero(tex, coord) textureLod(tex, coord, 0.0)
-#define SMAASampleLevelZeroPoint(tex, coord) textureLod(tex, coord, 0.0)
-#define SMAASampleLevelZeroOffset(tex, coord, offset) textureLodOffset(tex, coord, 0.0, offset)
-#define SMAASample(tex, coord) texture(tex, coord)
-#define SMAASamplePoint(tex, coord) texture(tex, coord)
-#define SMAASampleOffset(tex, coord, offset) texture(tex, coord, offset)
+#define SMAASampleLevelZero(tex, coord) textureLod(sampler2D(tex, linearSampler), coord, 0.0)
+#define SMAASampleLevelZeroPoint(tex, coord) textureLod(sampler2D(tex, linearSampler), coord, 0.0)
+#define SMAASampleLevelZeroOffset(tex, coord, offset) textureLodOffset(sampler2D(tex, linearSampler), coord, 0.0, offset)
+#define SMAASample(tex, coord) texture(sampler2D(tex, linearSampler), coord)
+#define SMAASamplePoint(tex, coord) texture(sampler2D(tex, linearSampler), coord)
+#define SMAASampleOffset(tex, coord, offset) texture(sampler2D(tex, linearSampler), coord, offset)
 #define SMAA_FLATTEN
 #define SMAA_BRANCH
 #define lerp(a, b, t) mix(a, b, t)
