@@ -247,43 +247,37 @@ impl SmaaTarget {
             bind_group_layouts: &[&edge_detect_bind_group_layout],
             push_constant_ranges: &[],
         });
-        let edge_detect_shader_vert = wgpu::ProgrammableStageDescriptor {
+        let edge_detect_shader_vert = wgpu::VertexState {
             module: &source.get_shader(
                 device,
                 ShaderStage::EdgeDetectionVS,
                 "smaa.shader.edge_detect.vert",
             )?,
             entry_point: "main",
+            buffers: &[],
         };
-        let edge_detect_shader_frag = wgpu::ProgrammableStageDescriptor {
+        let edge_detect_shader_frag = wgpu::FragmentState {
             module: &source.get_shader(
                 device,
                 ShaderStage::LumaEdgeDetectionPS,
                 "smaa.shader.edge_detect.frag",
             )?,
             entry_point: "main",
+            targets: &[wgpu::ColorTargetState {
+                format: wgpu::TextureFormat::Rg8Unorm,
+                color_blend: wgpu::BlendState::REPLACE,
+                alpha_blend: wgpu::BlendState::REPLACE,
+                write_mask: wgpu::ColorWrite::ALL,
+            }],
         };
         let edge_detect = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("smaa.pipeline.edge_detect"),
             layout: Some(&edge_detect_layout),
-            vertex_stage: edge_detect_shader_vert,
-            fragment_stage: Some(edge_detect_shader_frag),
-            rasterization_state: Some(Default::default()),
-            primitive_topology: wgpu::PrimitiveTopology::TriangleList,
-            color_states: &[wgpu::ColorStateDescriptor {
-                format: wgpu::TextureFormat::Rg8Unorm,
-                color_blend: wgpu::BlendDescriptor::REPLACE,
-                alpha_blend: wgpu::BlendDescriptor::REPLACE,
-                write_mask: wgpu::ColorWrite::ALL,
-            }],
-            depth_stencil_state: None,
-            vertex_state: wgpu::VertexStateDescriptor {
-                index_format: None,
-                vertex_buffers: &[],
-            },
-            sample_count: 1,
-            sample_mask: !0,
-            alpha_to_coverage_enabled: false,
+            vertex: edge_detect_shader_vert,
+            fragment: Some(edge_detect_shader_frag),
+            primitive: Default::default(),
+            multisample: Default::default(),
+            depth_stencil: None,
         });
 
         let blend_weight_bind_group_layout =
@@ -362,43 +356,37 @@ impl SmaaTarget {
             bind_group_layouts: &[&blend_weight_bind_group_layout],
             push_constant_ranges: &[],
         });
-        let blend_weight_shader_vert = wgpu::ProgrammableStageDescriptor {
+        let blend_weight_shader_vert = wgpu::VertexState {
             module: &source.get_shader(
                 device,
                 ShaderStage::BlendingWeightVS,
                 "smaa.shader.blending_weight.vert",
             )?,
             entry_point: "main",
+            buffers: &[],
         };
-        let blend_weight_shader_frag = wgpu::ProgrammableStageDescriptor {
+        let blend_weight_shader_frag = wgpu::FragmentState {
             module: &source.get_shader(
                 device,
                 ShaderStage::BlendingWeightPS,
                 "smaa.shader.blending_weight.frag",
             )?,
             entry_point: "main",
+            targets: &[wgpu::ColorTargetState {
+                format: wgpu::TextureFormat::Rgba8Unorm,
+                color_blend: wgpu::BlendState::REPLACE,
+                alpha_blend: wgpu::BlendState::REPLACE,
+                write_mask: wgpu::ColorWrite::ALL,
+            }]
         };
         let blend_weight = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("smaa.pipeline.blend_weight"),
             layout: Some(&blend_weight_layout),
-            vertex_stage: blend_weight_shader_vert,
-            fragment_stage: Some(blend_weight_shader_frag),
-            rasterization_state: Some(Default::default()),
-            primitive_topology: wgpu::PrimitiveTopology::TriangleList,
-            color_states: &[wgpu::ColorStateDescriptor {
-                format: wgpu::TextureFormat::Rgba8Unorm,
-                color_blend: wgpu::BlendDescriptor::REPLACE,
-                alpha_blend: wgpu::BlendDescriptor::REPLACE,
-                write_mask: wgpu::ColorWrite::ALL,
-            }],
-            depth_stencil_state: None,
-            vertex_state: wgpu::VertexStateDescriptor {
-                index_format: None,
-                vertex_buffers: &[],
-            },
-            sample_count: 1,
-            sample_mask: !0,
-            alpha_to_coverage_enabled: false,
+            vertex: blend_weight_shader_vert,
+            fragment: Some(blend_weight_shader_frag),
+            primitive: Default::default(),
+            multisample: Default::default(),
+            depth_stencil: None,
         });
 
         let neighborhood_blending_bind_group_layout =
@@ -463,15 +451,16 @@ impl SmaaTarget {
                 bind_group_layouts: &[&neighborhood_blending_bind_group_layout],
                 push_constant_ranges: &[],
             });
-        let neighborhood_blending_vert = wgpu::ProgrammableStageDescriptor {
+        let neighborhood_blending_vert = wgpu::VertexState {
             module: &source.get_shader(
                 device,
                 ShaderStage::NeighborhoodBlendingVS,
                 "smaa.shader.neighborhood_blending.vert",
             )?,
             entry_point: "main",
+            buffers: &[],
         };
-        let neighborhood_blending_frag = wgpu::ProgrammableStageDescriptor {
+        let neighborhood_blending_frag = wgpu::FragmentState {
             module: &source.get_shader(
                 device,
                 match tone_mapping {
@@ -483,29 +472,23 @@ impl SmaaTarget {
                 "smaa.shader.neighborhood_blending.frag",
             )?,
             entry_point: "main",
+            targets: &[wgpu::ColorTargetState {
+                format: output_format,
+                color_blend: wgpu::BlendState::REPLACE,
+                alpha_blend: wgpu::BlendState::REPLACE,
+                write_mask: wgpu::ColorWrite::ALL,
+            }]
         };
         let neighborhood_blending =
             device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: Some("smaa.pipeline.neighborhood_blending"),
                 layout: Some(&neighborhood_blending_layout),
-                vertex_stage: neighborhood_blending_vert,
-                fragment_stage: Some(neighborhood_blending_frag),
-                rasterization_state: Some(Default::default()),
-                primitive_topology: wgpu::PrimitiveTopology::TriangleList,
-                color_states: &[wgpu::ColorStateDescriptor {
-                    format: output_format,
-                    color_blend: wgpu::BlendDescriptor::REPLACE,
-                    alpha_blend: wgpu::BlendDescriptor::REPLACE,
-                    write_mask: wgpu::ColorWrite::ALL,
-                }],
-                depth_stencil_state: None,
-                vertex_state: wgpu::VertexStateDescriptor {
-                    index_format: None,
-                    vertex_buffers: &[],
-                },
-                sample_count: 1,
-                sample_mask: !0,
-                alpha_to_coverage_enabled: false,
+                vertex: neighborhood_blending_vert,
+                fragment: Some(neighborhood_blending_frag),
+                primitive: Default::default(),
+                multisample: Default::default(),
+                depth_stencil: None,
+    
             });
 
         Ok(Self {

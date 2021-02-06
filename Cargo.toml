@@ -4,7 +4,7 @@ version = "0.2.1"
 authors = ["Jonathan Behrens <fintelia@gmail.com>"]
 description = "A library for post process antialiasing using SMAA"
 repository = "https://github.com/fintelia/gfx_smaa"
-keywords = ["gfx", "graphics", "antialiasing", "SMAA"]
+keywords = ["graphics", "antialiasing", "SMAA"]
 categories = ["rendering", "game-engines"]
 license = "MIT"
 edition = "2018"
@@ -12,7 +12,7 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0.38"
 shaderc = "0.7.1"
-wgpu = { git = "https://github.com/gfx-rs/wgpu-rs", rev = "b04cc289e84e0a754c9059a23970d8204f367cd8" }
+wgpu = "0.7.0"
 
 [dev-dependencies]
 winit = "0.24.0"
