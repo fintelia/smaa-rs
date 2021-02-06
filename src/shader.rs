@@ -183,7 +183,7 @@ impl ShaderSource {
         device: &wgpu::Device,
         stage: ShaderStage,
         name: &'static str,
-    ) -> Result<wgpu::ShaderModule, failure::Error> {
+    ) -> Result<wgpu::ShaderModule, anyhow::Error> {
         let source = self.get_stage(stage);
         let mut glsl_compiler = shaderc::Compiler::new().unwrap();
         let spirv = glsl_compiler

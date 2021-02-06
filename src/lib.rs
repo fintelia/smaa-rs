@@ -1,42 +1,62 @@
-//! A library for post process antialiasing for the wgpu graphics API, based on the [SMAA
+//! A library for post process antialiasing for the wgpu graphics API, which uses the [SMAA
 //! reference implementation](https://github.com/iryoku/smaa).
 //!
 //! # Example
 //!
 //! ```
-//! # extern crate gfx_smaa;
-//! # extern crate piston_window;
-//! # use piston_window::*;
 //! # use gfx_smaa::SmaaTarget;
-//! # fn main(){
-//! // create window
-//! let mut window: PistonWindow = WindowSettings::new("SMAA", (640, 480)).build().unwrap();
+//! # use winit::event::Event;
+//! # use winit::event_loop::EventLoop;
+//! # use winit::window::Window;
+//! # fn main() { futures::executor::block_on(run()); }
+//! # async fn run() -> Result<(), anyhow::Error> {
+//! // Initialize wgpu
+//! let event_loop = EventLoop::new();
+//! let window = winit::window::Window::new(&event_loop).unwrap();
+//! let instance = wgpu::Instance::new(wgpu::BackendBit::all());
+//! let surface = unsafe { instance.create_surface(&window) };
+//! let adapter = instance.request_adapter(&Default::default()).await.unwrap();
+//! let (device, queue) = adapter.request_device(&Default::default(), None).await?;
+//! let swapchain_format = adapter.get_swap_chain_preferred_format(&surface);
+//! let mut swap_chain = device.create_swap_chain(&surface, &wgpu::SwapChainDescriptor {
+//!     usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
+//!     format: swapchain_format,
+//!     width: window.inner_size().width,
+//!     height: window.inner_size().width,
+//!     present_mode: wgpu::PresentMode::Mailbox,
+//! });
 //!
-//! // create target
-//! let mut target = SmaaTarget::<_>::new(&mut window.factory,
-//!                                       window.output_color.clone(),
-//!                                       640, 480).unwrap();
+//! // Create SMAA target
+//! let mut smaa_target = SmaaTarget::new(
+//!     &device,
+//!     &queue,
+//!     window.inner_size().width,
+//!     window.inner_size().height,
+//!     wgpu::TextureFormat::Rgba8Unorm,
+//!     swapchain_format
+//! )?;
 //!
-//! // main loop
-//! while let Some(e) = window.next() {
-//!     window.draw_3d(&e, |window| {
-//!         // clear depth and color buffers.
-//!         window.encoder.clear_depth(&target.output_depth(), 1.0);
-//!         window.encoder.clear(&target.output_color(), [0.0, 0.0, 0.0, 1.0]);
+//! // Main loop
+//! event_loop.run(move |event, _, control_flow| {
+//! #    *control_flow = winit::event_loop::ControlFlow::Exit;
+//!     match event {
+//!         Event::RedrawRequested(_) => {
+//!             let frame = smaa_target.color_target();
 //!
-//!         // Render the scene.
-//!         // [...]
-//!
-//!         // Perform actual antialiasing operation and write the result to the screen.
-//!         target.resolve(&mut window.encoder);
-//!      });
-//! #     break; // don't want test to run forever.
-//! }
+//!             // Render the scene into `frame`.
+//!             // [...]
+//!    
+//!             let output_frame = swap_chain.get_current_frame().unwrap().output;
+//!             smaa_target.resolve(&device, &queue, &output_frame.view);
+//!         }
+//!         _ => {}
+//!     }
+//! });
 //! # }
 
 #![deny(missing_docs)]
 
-use failure::Error;
+use anyhow::Error;
 
 mod shader;
 use shader::{ShaderQuality, ShaderSource, ShaderStage};
@@ -54,7 +74,7 @@ use wgpu::util::DeviceExt;
 /// Which tone mapping function to use. Currently, only one such function is supported, but more may
 /// be added in the future.
 pub enum ToneMappingFunction {
-    /// Use the equation from https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve
+    /// Use the equation from <https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve>
     AcesNormalized,
 }
 
@@ -83,7 +103,8 @@ impl SmaaTarget {
         queue: &wgpu::Queue,
         width: u32,
         height: u32,
-        format: wgpu::TextureFormat,
+        input_format: wgpu::TextureFormat,
+        output_format: wgpu::TextureFormat,
         tone_mapping: Option<ToneMappingFunction>,
     ) -> Result<Self, Error> {
         let size = wgpu::Extent3d {
@@ -102,7 +123,7 @@ impl SmaaTarget {
         };
 
         let color_target = device.create_texture(&wgpu::TextureDescriptor {
-            format: wgpu::TextureFormat::Rgba16Float,
+            format: input_format,
             ..texture_desc
         });
 
@@ -472,7 +493,7 @@ impl SmaaTarget {
                 rasterization_state: Some(Default::default()),
                 primitive_topology: wgpu::PrimitiveTopology::TriangleList,
                 color_states: &[wgpu::ColorStateDescriptor {
-                    format,
+                    format: output_format,
                     color_blend: wgpu::BlendDescriptor::REPLACE,
                     alpha_blend: wgpu::BlendDescriptor::REPLACE,
                     write_mask: wgpu::ColorWrite::ALL,
@@ -509,9 +530,10 @@ impl SmaaTarget {
         queue: &wgpu::Queue,
         width: u32,
         height: u32,
-        format: wgpu::TextureFormat,
+        input_format: wgpu::TextureFormat,
+        output_format: wgpu::TextureFormat,
     ) -> Result<Self, Error> {
-        Self::new_internal(device, queue, width, height, format, None)
+        Self::new_internal(device, queue, width, height, input_format, output_format, None)
     }
 
     /// Create a new `SmaaTarget` that also applies tone mapping to the final image.
@@ -520,10 +542,11 @@ impl SmaaTarget {
         queue: &wgpu::Queue,
         width: u32,
         height: u32,
-        format: wgpu::TextureFormat,
+        input_format: wgpu::TextureFormat,
+        output_format: wgpu::TextureFormat,
         tone_mapping: ToneMappingFunction,
     ) -> Result<Self, Error> {
-        Self::new_internal(device, queue, width, height, format, Some(tone_mapping))
+        Self::new_internal(device, queue, width, height, input_format, output_format, Some(tone_mapping))
     }
 
     /// Get the color buffer associated with this target.
