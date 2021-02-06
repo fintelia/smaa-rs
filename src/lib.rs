@@ -1,10 +1,9 @@
-//! A library for post process antialiasing for the wgpu graphics API, which uses the [SMAA
-//! reference implementation](https://github.com/iryoku/smaa).
+//! Post-process antialiasing for wgpu-rs, using the [SMAA reference implementation](https://github.com/iryoku/smaa).
 //!
 //! # Example
 //!
 //! ```
-//! # use gfx_smaa::SmaaTarget;
+//! # use smaa::SmaaTarget;
 //! # use winit::event::Event;
 //! # use winit::event_loop::EventLoop;
 //! # use winit::window::Window;
