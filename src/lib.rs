@@ -537,7 +537,7 @@ impl SmaaTarget {
         &self.color_target
     }
 
-    /// Do a multisample resolve, outputing to the frame buffer specified at creation time.
+    /// Do a multisample resolve, outputing to the frame buffer specified in output_view.
     pub fn resolve(
         &mut self,
         device: &wgpu::Device,
