@@ -1,5 +1,3 @@
-use shaderc::ShaderKind;
-
 #[allow(dead_code)]
 pub enum ShaderQuality {
     Low,
@@ -185,21 +183,23 @@ impl ShaderSource {
         name: &'static str,
     ) -> Result<wgpu::ShaderModule, anyhow::Error> {
         let source = self.get_stage(stage);
-        let mut glsl_compiler = shaderc::Compiler::new().unwrap();
-        let spirv = glsl_compiler
-            .compile_into_spirv(
-                &source,
-                if stage.is_vertex_shader() {
-                    ShaderKind::Vertex
-                } else {
-                    ShaderKind::Fragment
-                },
-                name,
-                "main",
-                None,
-            )?
-            .as_binary()
-            .to_vec();
+
+        let module = naga::front::glsl::parse_str(
+            &source,
+            "main",
+            if stage.is_vertex_shader() {
+                naga::ShaderStage::Vertex
+            } else {
+                naga::ShaderStage::Fragment
+            },
+            Default::default(),
+        )?;
+
+        let spirv = naga::back::spv::write_vec(
+            &module,
+            naga::back::spv::WriterFlags::NONE,
+            vec![naga::back::spv::Capability::Shader].into_iter().collect(),
+        )?;
 
         Ok(device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some(name),

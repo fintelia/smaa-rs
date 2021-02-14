@@ -11,7 +11,7 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.38"
-shaderc = "0.7.1"
+naga = { version = "0.3.1", features = ["glsl-in"] }
 wgpu = "0.7.0"
 
 [dev-dependencies]
