@@ -98,7 +98,7 @@ impl ShaderStage {
                  layout(location = 1) in float4 offset1;
                  layout(location = 2) in float4 offset2;
                  layout(location = 3) in float2 texcoord;
-                 layout(set = 0, binding = 1) uniform texture2D colorTex;
+                 layout(set = 0, binding = 2) uniform texture2D colorTex;
                  layout(location = 0) out float2 OutColor;
                  void main() {
                      float4 offset[3] = float4[](offset0, offset1, offset2);
@@ -111,9 +111,9 @@ impl ShaderStage {
                  layout(location = 2) in float4 offset1;
                  layout(location = 3) in float4 offset2;
                  layout(location = 4) in float2 texcoord;
-                 layout(set = 0, binding = 1) uniform texture2D edgesTex;
-                 layout(set = 0, binding = 2) uniform texture2D areaTex;
-                 layout(set = 0, binding = 3) uniform texture2D searchTex;
+                 layout(set = 0, binding = 2) uniform texture2D edgesTex;
+                 layout(set = 0, binding = 3) uniform texture2D areaTex;
+                 layout(set = 0, binding = 4) uniform texture2D searchTex;
                  layout(location = 0) out float4 OutColor;
                  void main() {
                      vec4 subsampleIndices = vec4(0);
@@ -125,8 +125,8 @@ impl ShaderStage {
             ShaderStage::NeighborhoodBlendingPS => {
                 "layout(location = 0) in float4 offset;
                  layout(location = 1) in float2 texcoord;
-                 layout(set = 0, binding = 1) uniform texture2D colorTex;
-                 layout(set = 0, binding = 2) uniform texture2D blendTex;
+                 layout(set = 0, binding = 2) uniform texture2D colorTex;
+                 layout(set = 0, binding = 3) uniform texture2D blendTex;
                  layout(location = 0) out float4 OutColor;
                  void main() {
                      OutColor = SMAANeighborhoodBlendingPS(texcoord, offset, colorTex, blendTex);
@@ -136,8 +136,8 @@ impl ShaderStage {
             ShaderStage::NeighborhoodBlendingAcesTonemapPS => {
                 "layout(location = 0) in float4 offset;
                  layout(location = 1) in float2 texcoord;
-                 layout(set = 0, binding = 1) uniform texture2D colorTex;
-                 layout(set = 0, binding = 1) uniform texture2D blendTex;
+                 layout(set = 0, binding = 2) uniform texture2D colorTex;
+                 layout(set = 0, binding = 3) uniform texture2D blendTex;
                  layout(location = 0) out float4 OutColor;
                  void main() {
                      float a = 2.51f;
@@ -155,8 +155,6 @@ impl ShaderStage {
 }
 
 pub(crate) struct ShaderSource {
-    pub width: u32,
-    pub height: u32,
     pub quality: ShaderQuality,
 }
 impl ShaderSource {
@@ -164,15 +162,16 @@ impl ShaderSource {
         format!(
             "#version 450 core
             #extension GL_EXT_samplerless_texture_functions: require
-            #define SMAA_RT_METRICS float4(1.0 / {0}.0, 1.0 / {1}.0, {0}.0, {1}.0)
             #define SMAA_GLSL_3
-            #define SMAA_PRESET_{2}
-            #define SMAA_INCLUDE_{3} 0
+            #define SMAA_PRESET_{0}
+            #define SMAA_INCLUDE_{1} 0
+            #define SMAA_RT_METRICS uniforms.rt
             layout(set = 0, binding = 0) uniform sampler linearSampler;
-            {4}
-            {5}",
-            self.width,
-            self.height,
+            layout(set = 0, binding = 1) uniform UniformBlock {{
+                vec4 rt;
+            }} uniforms;
+            {2}
+            {3}",
             self.quality.as_str(),
             if stage.is_vertex_shader() { "PS" } else { "VS" },
             include_str!("../third_party/smaa/SMAA.hlsl"),

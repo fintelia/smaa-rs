@@ -86,14 +86,7 @@ fn main() {
                         present_mode: wgpu::PresentMode::Mailbox,
                     },
                 );
-                smaa_target = SmaaTarget::new(
-                    &device,
-                    &queue,
-                    size.width,
-                    size.height,
-                    swapchain_format,
-                    SmaaMode::Smaa1X,
-                );
+                smaa_target.resize(&device, size.width, size.height);
             }
             Event::RedrawRequested(_) => {
                 let output_frame = swap_chain.get_current_frame().unwrap().output;
