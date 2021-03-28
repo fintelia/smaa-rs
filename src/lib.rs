@@ -21,7 +21,7 @@
 //!     usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
 //!     format: swapchain_format,
 //!     width: window.inner_size().width,
-//!     height: window.inner_size().width,
+//!     height: window.inner_size().height,
 //!     present_mode: wgpu::PresentMode::Mailbox,
 //! });
 //!
