@@ -1,6 +1,6 @@
 [package]
 name = "smaa"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Jonathan Behrens <fintelia@gmail.com>"]
 description = "A library for post process antialiasing using SMAA"
 repository = "https://github.com/fintelia/gfx_smaa"
@@ -10,7 +10,6 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-anyhow = "1.0.38"
 shaderc = "0.7.1"
 wgpu = "0.7.0"
 

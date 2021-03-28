@@ -29,6 +29,7 @@ pub enum ShaderStage {
     NeighborhoodBlendingVS,
     NeighborhoodBlendingPS,
 
+    #[allow(unused)]
     NeighborhoodBlendingAcesTonemapPS,
 }
 impl ShaderStage {
@@ -183,7 +184,7 @@ impl ShaderSource {
         device: &wgpu::Device,
         stage: ShaderStage,
         name: &'static str,
-    ) -> Result<wgpu::ShaderModule, anyhow::Error> {
+    ) -> wgpu::ShaderModule {
         let source = self.get_stage(stage);
         let mut glsl_compiler = shaderc::Compiler::new().unwrap();
         let spirv = glsl_compiler
@@ -197,14 +198,15 @@ impl ShaderSource {
                 name,
                 "main",
                 None,
-            )?
+            )
+            .unwrap()
             .as_binary()
             .to_vec();
 
-        Ok(device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+        device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some(name),
             source: wgpu::ShaderSource::SpirV(spirv.into()),
             flags: wgpu::ShaderFlags::empty(),
-        }))
+        })
     }
 }

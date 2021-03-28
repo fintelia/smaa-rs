@@ -3,12 +3,12 @@
 //! # Example
 //!
 //! ```
-//! # use smaa::SmaaTarget;
+//! # use smaa::{SmaaMode, SmaaTarget};
 //! # use winit::event::Event;
 //! # use winit::event_loop::EventLoop;
 //! # use winit::window::Window;
 //! # fn main() { futures::executor::block_on(run()); }
-//! # async fn run() -> Result<(), anyhow::Error> {
+//! # async fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! // Initialize wgpu
 //! let event_loop = EventLoop::new();
 //! let window = winit::window::Window::new(&event_loop).unwrap();
@@ -31,22 +31,20 @@
 //!     &queue,
 //!     window.inner_size().width,
 //!     window.inner_size().height,
-//!     wgpu::TextureFormat::Rgba8Unorm,
-//!     swapchain_format
-//! )?;
+//!     swapchain_format,
+//!     SmaaMode::Smaa1X,
+//! );
 //!
 //! // Main loop
 //! event_loop.run(move |event, _, control_flow| {
 //! #    *control_flow = winit::event_loop::ControlFlow::Exit;
 //!     match event {
 //!         Event::RedrawRequested(_) => {
-//!             let frame = smaa_target.color_target();
-//!
-//!             // Render the scene into `frame`.
-//!             // [...]
-//!    
 //!             let output_frame = swap_chain.get_current_frame().unwrap().output;
-//!             smaa_target.resolve(&device, &queue, &output_frame.view);
+//!             let frame = smaa_target.start_frame(&device, &queue, &output_frame.view);
+//!
+//!             // Render the scene into `*frame`.
+//!             // [...]
 //!         }
 //!         _ => {}
 //!     }
@@ -54,8 +52,6 @@
 //! # }
 
 #![deny(missing_docs)]
-
-use anyhow::Error;
 
 mod shader;
 use shader::{ShaderQuality, ShaderSource, ShaderStage};
@@ -70,18 +66,19 @@ use search_tex::*;
 
 use wgpu::util::DeviceExt;
 
-/// Which tone mapping function to use. Currently, only one such function is supported, but more may
-/// be added in the future.
-pub enum ToneMappingFunction {
-    /// Use the equation from <https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve>
-    AcesNormalized,
+/// Anti-aliasing mode. Higher values produce nicer results but run slower.
+#[non_exhaustive]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum SmaaMode {
+    /// Do not perform antialiasing.
+    Disabled,
+    /// Use SMAA 1x.
+    Smaa1X,
 }
 
-/// A `SmaaTarget` wraps a color and depth buffer, which it can resolve into an antialiased image
-/// using the [Subpixel Morphological Antialiasing (SMAA)](http://www.iryoku.com/smaa) algorithm.
-pub struct SmaaTarget {
+struct SmaaTargetInner {
     /// Render target for actual frame data.
-    color_target: wgpu::Texture,
+    color_target_view: wgpu::TextureView,
 
     edges_target: wgpu::TextureView,
     blend_target: wgpu::TextureView,
@@ -95,17 +92,27 @@ pub struct SmaaTarget {
     neighborhood_blending_bind_group: wgpu::BindGroup,
 }
 
+/// Wraps a color buffer, which it can resolve into an antialiased image using the
+/// [Subpixel Morphological Antialiasing (SMAA)](http://www.iryoku.com/smaa) algorithm.
+pub struct SmaaTarget {
+    inner: Option<SmaaTargetInner>,
+}
+
 impl SmaaTarget {
     /// Create a new `SmaaTarget`.
-    fn new_internal(
+    /// Create a new `SmaaTarget`.
+    pub fn new(
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         width: u32,
         height: u32,
-        input_format: wgpu::TextureFormat,
-        output_format: wgpu::TextureFormat,
-        tone_mapping: Option<ToneMappingFunction>,
-    ) -> Result<Self, Error> {
+        format: wgpu::TextureFormat,
+        mode: SmaaMode,
+    ) -> Self {
+        if let SmaaMode::Disabled = mode {
+            return SmaaTarget { inner: None };
+        }
+
         let size = wgpu::Extent3d {
             width,
             height,
@@ -121,10 +128,15 @@ impl SmaaTarget {
             label: None,
         };
 
-        let color_target = device.create_texture(&wgpu::TextureDescriptor {
-            format: input_format,
-            ..texture_desc
-        });
+        let color_target_view = device
+            .create_texture(&wgpu::TextureDescriptor {
+                format,
+                ..texture_desc
+            })
+            .create_view(&wgpu::TextureViewDescriptor {
+                label: Some("smaa.color_target.view"),
+                ..Default::default()
+            });
 
         let edges_target = device
             .create_texture(&wgpu::TextureDescriptor {
@@ -235,9 +247,7 @@ impl SmaaTarget {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: wgpu::BindingResource::TextureView(
-                        &color_target.create_view(&Default::default()),
-                    ),
+                    resource: wgpu::BindingResource::TextureView(&color_target_view),
                 },
             ],
         });
@@ -251,7 +261,7 @@ impl SmaaTarget {
                 device,
                 ShaderStage::EdgeDetectionVS,
                 "smaa.shader.edge_detect.vert",
-            )?,
+            ),
             entry_point: "main",
             buffers: &[],
         };
@@ -260,7 +270,7 @@ impl SmaaTarget {
                 device,
                 ShaderStage::LumaEdgeDetectionPS,
                 "smaa.shader.edge_detect.frag",
-            )?,
+            ),
             entry_point: "main",
             targets: &[wgpu::ColorTargetState {
                 format: wgpu::TextureFormat::Rg8Unorm,
@@ -360,7 +370,7 @@ impl SmaaTarget {
                 device,
                 ShaderStage::BlendingWeightVS,
                 "smaa.shader.blending_weight.vert",
-            )?,
+            ),
             entry_point: "main",
             buffers: &[],
         };
@@ -369,14 +379,14 @@ impl SmaaTarget {
                 device,
                 ShaderStage::BlendingWeightPS,
                 "smaa.shader.blending_weight.frag",
-            )?,
+            ),
             entry_point: "main",
             targets: &[wgpu::ColorTargetState {
                 format: wgpu::TextureFormat::Rgba8Unorm,
                 color_blend: wgpu::BlendState::REPLACE,
                 alpha_blend: wgpu::BlendState::REPLACE,
                 write_mask: wgpu::ColorWrite::ALL,
-            }]
+            }],
         };
         let blend_weight = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("smaa.pipeline.blend_weight"),
@@ -434,9 +444,7 @@ impl SmaaTarget {
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
-                        resource: wgpu::BindingResource::TextureView(
-                            &color_target.create_view(&Default::default()),
-                        ),
+                        resource: wgpu::BindingResource::TextureView(&color_target_view),
                     },
                     wgpu::BindGroupEntry {
                         binding: 2,
@@ -455,28 +463,23 @@ impl SmaaTarget {
                 device,
                 ShaderStage::NeighborhoodBlendingVS,
                 "smaa.shader.neighborhood_blending.vert",
-            )?,
+            ),
             entry_point: "main",
             buffers: &[],
         };
         let neighborhood_blending_frag = wgpu::FragmentState {
             module: &source.get_shader(
                 device,
-                match tone_mapping {
-                    Some(ToneMappingFunction::AcesNormalized) => {
-                        ShaderStage::NeighborhoodBlendingAcesTonemapPS
-                    }
-                    None => ShaderStage::NeighborhoodBlendingPS,
-                },
+                ShaderStage::NeighborhoodBlendingPS,
                 "smaa.shader.neighborhood_blending.frag",
-            )?,
+            ),
             entry_point: "main",
             targets: &[wgpu::ColorTargetState {
-                format: output_format,
+                format,
                 color_blend: wgpu::BlendState::REPLACE,
                 alpha_blend: wgpu::BlendState::REPLACE,
                 write_mask: wgpu::ColorWrite::ALL,
-            }]
+            }],
         };
         let neighborhood_blending =
             device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -487,116 +490,118 @@ impl SmaaTarget {
                 primitive: Default::default(),
                 multisample: Default::default(),
                 depth_stencil: None,
-    
             });
 
-        Ok(Self {
-            color_target,
+        SmaaTarget {
+            inner: Some(SmaaTargetInner {
+                color_target_view,
 
-            edges_target,
-            blend_target,
+                edges_target,
+                blend_target,
 
-            edge_detect,
-            blend_weight,
-            neighborhood_blending,
+                edge_detect,
+                blend_weight,
+                neighborhood_blending,
 
-            edge_detect_bind_group,
-            blend_weight_bind_group,
-            neighborhood_blending_bind_group,
-        })
-    }
-
-    /// Create a new `SmaaTarget`.
-    pub fn new(
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        width: u32,
-        height: u32,
-        input_format: wgpu::TextureFormat,
-        output_format: wgpu::TextureFormat,
-    ) -> Result<Self, Error> {
-        Self::new_internal(device, queue, width, height, input_format, output_format, None)
-    }
-
-    /// Create a new `SmaaTarget` that also applies tone mapping to the final image.
-    pub fn with_tone_mapping(
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        width: u32,
-        height: u32,
-        input_format: wgpu::TextureFormat,
-        output_format: wgpu::TextureFormat,
-        tone_mapping: ToneMappingFunction,
-    ) -> Result<Self, Error> {
-        Self::new_internal(device, queue, width, height, input_format, output_format, Some(tone_mapping))
-    }
-
-    /// Get the color buffer associated with this target.
-    pub fn color_target(&self) -> &wgpu::Texture {
-        &self.color_target
-    }
-
-    /// Do a multisample resolve, outputing to the frame buffer specified in output_view.
-    pub fn resolve(
-        &mut self,
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        output_view: &wgpu::TextureView,
-    ) {
-        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("smaa.command_encoder"),
-        });
-        {
-            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
-                    attachment: &self.edges_target,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                        store: true,
-                    },
-                }],
-                depth_stencil_attachment: None,
-                label: Some("smaa.render_pass.edge_detect"),
-            });
-            rpass.set_pipeline(&self.edge_detect);
-            rpass.set_bind_group(0, &self.edge_detect_bind_group, &[]);
-            rpass.draw(0..3, 0..1);
+                edge_detect_bind_group,
+                blend_weight_bind_group,
+                neighborhood_blending_bind_group,
+            }),
         }
-        {
-            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
-                    attachment: &self.blend_target,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                        store: true,
-                    },
-                }],
-                depth_stencil_attachment: None,
-                label: Some("smaa.render_pass.blend_weight"),
-            });
-            rpass.set_pipeline(&self.blend_weight);
-            rpass.set_bind_group(0, &self.blend_weight_bind_group, &[]);
-            rpass.draw(0..3, 0..1);
+    }
+
+    /// Start rendering a frame. Dropping the returned frame object will resolve the scene into the provided output_view.
+    pub fn start_frame<'a>(
+        &'a mut self,
+        device: &'a wgpu::Device,
+        queue: &'a wgpu::Queue,
+        output_view: &'a wgpu::TextureView,
+    ) -> SmaaFrame<'a> {
+        SmaaFrame {
+            target: self,
+            device,
+            queue,
+            output_view,
         }
-        {
-            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
-                    attachment: output_view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                        store: true,
-                    },
-                }],
-                depth_stencil_attachment: None,
-                label: Some("smaa.render_pass.neighborhood_blending"),
-            });
-            rpass.set_pipeline(&self.neighborhood_blending);
-            rpass.set_bind_group(0, &self.neighborhood_blending_bind_group, &[]);
-            rpass.draw(0..3, 0..1);
+    }
+}
+
+/// Frame that the scene should be rendered into; can be created by a SmaaTarget.
+pub struct SmaaFrame<'a> {
+    target: &'a mut SmaaTarget,
+    device: &'a wgpu::Device,
+    queue: &'a wgpu::Queue,
+    output_view: &'a wgpu::TextureView,
+}
+impl<'a> std::ops::Deref for SmaaFrame<'a> {
+    type Target = wgpu::TextureView;
+    fn deref(&self) -> &Self::Target {
+        match self.target.inner {
+            None => self.output_view,
+            Some(ref inner) => &inner.color_target_view,
         }
-        queue.submit(Some(encoder.finish()));
+    }
+}
+impl<'a> Drop for SmaaFrame<'a> {
+    fn drop(&mut self) {
+        if let Some(ref mut target) = self.target.inner {
+            let mut encoder = self
+                .device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("smaa.command_encoder"),
+                });
+            {
+                let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
+                        attachment: &target.edges_target,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                            store: true,
+                        },
+                    }],
+                    depth_stencil_attachment: None,
+                    label: Some("smaa.render_pass.edge_detect"),
+                });
+                rpass.set_pipeline(&target.edge_detect);
+                rpass.set_bind_group(0, &target.edge_detect_bind_group, &[]);
+                rpass.draw(0..3, 0..1);
+            }
+            {
+                let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
+                        attachment: &target.blend_target,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                            store: true,
+                        },
+                    }],
+                    depth_stencil_attachment: None,
+                    label: Some("smaa.render_pass.blend_weight"),
+                });
+                rpass.set_pipeline(&target.blend_weight);
+                rpass.set_bind_group(0, &target.blend_weight_bind_group, &[]);
+                rpass.draw(0..3, 0..1);
+            }
+            {
+                let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
+                        attachment: self.output_view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                            store: true,
+                        },
+                    }],
+                    depth_stencil_attachment: None,
+                    label: Some("smaa.render_pass.neighborhood_blending"),
+                });
+                rpass.set_pipeline(&target.neighborhood_blending);
+                rpass.set_bind_group(0, &target.neighborhood_blending_bind_group, &[]);
+                rpass.draw(0..3, 0..1);
+            }
+            self.queue.submit(Some(encoder.finish()));
+        }
     }
 }
