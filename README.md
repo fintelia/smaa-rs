@@ -11,21 +11,19 @@ let mut smaa_target = SmaaTarget::new(
     &queue,
     window.inner_size().width,
     window.inner_size().height,
-    wgpu::TextureFormat::Rgba8Unorm,
-    swapchain_format
-)?;
+    swapchain_format,
+    SmaaMode::Smaa1X,
+);
 
 // Main loop
 event_loop.run(move |event, _, control_flow| {
     match event {
         Event::RedrawRequested(_) => {
-            let frame = smaa_target.color_target();
-
-            // Render the scene into `frame`.
-            // [...]
-   
             let output_frame = swap_chain.get_current_frame().unwrap().output;
-            smaa_target.resolve(&device, &queue, &output_frame.view);
+            let frame = smaa_target.start_frame(&device, &queue, &output_frame.view);
+
+            // Render the scene into `*frame`.
+            // [...]
         }
         _ => {}
     }
