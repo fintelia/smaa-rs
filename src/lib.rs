@@ -405,10 +405,10 @@ impl Targets {
 
         let mut uniform_data = Vec::new();
         for f in &[
-            width as f32,
-            height as f32,
             1.0 / width as f32,
             1.0 / height as f32,
+            width as f32,
+            height as f32,
         ] {
             uniform_data.extend_from_slice(&f.to_ne_bytes());
         }
