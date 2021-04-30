@@ -16,7 +16,9 @@ fn main() {
         futures::executor::block_on(instance.request_adapter(&Default::default())).unwrap();
     let (device, queue) =
         futures::executor::block_on(adapter.request_device(&Default::default(), None)).unwrap();
-    let swapchain_format = adapter.get_swap_chain_preferred_format(&surface);
+    let swapchain_format = adapter
+        .get_swap_chain_preferred_format(&surface)
+        .unwrap_or(wgpu::TextureFormat::Bgra8UnormSrgb);
     let mut swap_chain = device.create_swap_chain(
         &surface,
         &wgpu::SwapChainDescriptor {
@@ -97,8 +99,8 @@ fn main() {
                 {
                     let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                         label: None,
-                        color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
-                            attachment: &*frame,
+                        color_attachments: &[wgpu::RenderPassColorAttachment {
+                            view: &*frame,
                             resolve_target: None,
                             ops: wgpu::Operations {
                                 load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),

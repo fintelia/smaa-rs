@@ -16,7 +16,8 @@
 //! let surface = unsafe { instance.create_surface(&window) };
 //! let adapter = instance.request_adapter(&Default::default()).await.unwrap();
 //! let (device, queue) = adapter.request_device(&Default::default(), None).await?;
-//! let swapchain_format = adapter.get_swap_chain_preferred_format(&surface);
+//! let swapchain_format = adapter.get_swap_chain_preferred_format(&surface)
+//!     .unwrap_or(wgpu::TextureFormat::Bgra8UnormSrgb);
 //! let mut swap_chain = device.create_swap_chain(&surface, &wgpu::SwapChainDescriptor {
 //!     usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
 //!     format: swapchain_format,
@@ -169,7 +170,7 @@ impl BindGroupLayouts {
                             binding: 2,
                             visibility: wgpu::ShaderStage::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
-                                sample_type: wgpu::TextureSampleType::Uint,
+                                sample_type: wgpu::TextureSampleType::Float { filterable: true },
                                 view_dimension: wgpu::TextureViewDimension::D2,
                                 multisampled: false,
                             },
@@ -179,7 +180,7 @@ impl BindGroupLayouts {
                             binding: 3,
                             visibility: wgpu::ShaderStage::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
-                                sample_type: wgpu::TextureSampleType::Uint,
+                                sample_type: wgpu::TextureSampleType::Float { filterable: true },
                                 view_dimension: wgpu::TextureViewDimension::D2,
                                 multisampled: false,
                             },
@@ -189,7 +190,7 @@ impl BindGroupLayouts {
                             binding: 4,
                             visibility: wgpu::ShaderStage::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
-                                sample_type: wgpu::TextureSampleType::Uint,
+                                sample_type: wgpu::TextureSampleType::Float { filterable: true },
                                 view_dimension: wgpu::TextureViewDimension::D2,
                                 multisampled: false,
                             },
@@ -235,7 +236,7 @@ impl BindGroupLayouts {
                             binding: 3,
                             visibility: wgpu::ShaderStage::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
-                                sample_type: wgpu::TextureSampleType::Uint,
+                                sample_type: wgpu::TextureSampleType::Float { filterable: true },
                                 view_dimension: wgpu::TextureViewDimension::D2,
                                 multisampled: false,
                             },
@@ -281,8 +282,10 @@ impl Pipelines {
             entry_point: "main",
             targets: &[wgpu::ColorTargetState {
                 format: wgpu::TextureFormat::Rg8Unorm,
-                color_blend: wgpu::BlendState::REPLACE,
-                alpha_blend: wgpu::BlendState::REPLACE,
+                blend: Some(wgpu::BlendState {
+                    color: wgpu::BlendComponent::REPLACE,
+                    alpha: wgpu::BlendComponent::REPLACE,
+                }),
                 write_mask: wgpu::ColorWrite::ALL,
             }],
         };
@@ -319,8 +322,10 @@ impl Pipelines {
             entry_point: "main",
             targets: &[wgpu::ColorTargetState {
                 format: wgpu::TextureFormat::Rgba8Unorm,
-                color_blend: wgpu::BlendState::REPLACE,
-                alpha_blend: wgpu::BlendState::REPLACE,
+                blend: Some(wgpu::BlendState {
+                    color: wgpu::BlendComponent::REPLACE,
+                    alpha: wgpu::BlendComponent::REPLACE,
+                }),
                 write_mask: wgpu::ColorWrite::ALL,
             }],
         };
@@ -358,8 +363,10 @@ impl Pipelines {
             entry_point: "main",
             targets: &[wgpu::ColorTargetState {
                 format,
-                color_blend: wgpu::BlendState::REPLACE,
-                alpha_blend: wgpu::BlendState::REPLACE,
+                blend: Some(wgpu::BlendState {
+                    color: wgpu::BlendComponent::REPLACE,
+                    alpha: wgpu::BlendComponent::REPLACE,
+                }),
                 write_mask: wgpu::ColorWrite::ALL,
             }],
         };
@@ -391,7 +398,7 @@ impl Targets {
         let size = wgpu::Extent3d {
             width,
             height,
-            depth: 1,
+            depth_or_array_layers: 1,
         };
         let texture_desc = wgpu::TextureDescriptor {
             size,
@@ -462,7 +469,7 @@ impl Resources {
                 size: wgpu::Extent3d {
                     width: AREATEX_WIDTH,
                     height: AREATEX_HEIGHT,
-                    depth: 1,
+                    depth_or_array_layers: 1,
                 },
                 mip_level_count: 1,
                 sample_count: 1,
@@ -480,7 +487,7 @@ impl Resources {
                 size: wgpu::Extent3d {
                     width: SEARCHTEX_WIDTH,
                     height: SEARCHTEX_HEIGHT,
-                    depth: 1,
+                    depth_or_array_layers: 1,
                 },
                 mip_level_count: 1,
                 sample_count: 1,
@@ -517,66 +524,9 @@ impl BindGroups {
         targets: &Targets,
     ) -> Self {
         Self {
-        edge_detect_bind_group: device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("smaa.bind_group.edge_detect"),
-            layout: &layouts.edge_detect_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::Sampler(&resources.linear_sampler),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Buffer {
-                        buffer: &targets.rt_uniforms,
-                        offset: 0,
-                        size: None,
-                    },
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: wgpu::BindingResource::TextureView(&targets.color_target),
-                },
-            ],
-        }),
-
-        blend_weight_bind_group: device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("smaa.bind_group.blend_weight"),
-            layout: &layouts.blend_weight_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::Sampler(&resources.linear_sampler),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Buffer {
-                        buffer: &targets.rt_uniforms,
-                        offset: 0,
-                        size: None,
-                    },
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: wgpu::BindingResource::TextureView(&targets.edges_target),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 3,
-                    resource: wgpu::BindingResource::TextureView(
-                        &resources.area_texture.create_view(&Default::default()),
-                    ),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 4,
-                    resource: wgpu::BindingResource::TextureView(
-                        &resources.search_texture.create_view(&Default::default()),
-                    ),
-                },
-            ],
-        }), neighborhood_blending_bind_group:
-            device.create_bind_group(&wgpu::BindGroupDescriptor {
-                label: Some("smaa.bind_group.neighborhood_blending"),
-                layout: &layouts.neighborhood_blending_bind_group_layout,
+            edge_detect_bind_group: device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("smaa.bind_group.edge_detect"),
+                layout: &layouts.edge_detect_bind_group_layout,
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
@@ -584,22 +534,81 @@ impl BindGroups {
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
-                        resource: wgpu::BindingResource::Buffer {
+                        resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
                             buffer: &targets.rt_uniforms,
                             offset: 0,
                             size: None,
-                        },
+                        }),
                     },
                     wgpu::BindGroupEntry {
                         binding: 2,
                         resource: wgpu::BindingResource::TextureView(&targets.color_target),
                     },
+                ],
+            }),
+
+            blend_weight_bind_group: device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("smaa.bind_group.blend_weight"),
+                layout: &layouts.blend_weight_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::Sampler(&resources.linear_sampler),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                            buffer: &targets.rt_uniforms,
+                            offset: 0,
+                            size: None,
+                        }),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: wgpu::BindingResource::TextureView(&targets.edges_target),
+                    },
                     wgpu::BindGroupEntry {
                         binding: 3,
-                        resource: wgpu::BindingResource::TextureView(&targets.blend_target),
+                        resource: wgpu::BindingResource::TextureView(
+                            &resources.area_texture.create_view(&Default::default()),
+                        ),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 4,
+                        resource: wgpu::BindingResource::TextureView(
+                            &resources.search_texture.create_view(&Default::default()),
+                        ),
                     },
                 ],
-            })
+            }),
+            neighborhood_blending_bind_group: device.create_bind_group(
+                &wgpu::BindGroupDescriptor {
+                    label: Some("smaa.bind_group.neighborhood_blending"),
+                    layout: &layouts.neighborhood_blending_bind_group_layout,
+                    entries: &[
+                        wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: wgpu::BindingResource::Sampler(&resources.linear_sampler),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 1,
+                            resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                                buffer: &targets.rt_uniforms,
+                                offset: 0,
+                                size: None,
+                            }),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 2,
+                            resource: wgpu::BindingResource::TextureView(&targets.color_target),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 3,
+                            resource: wgpu::BindingResource::TextureView(&targets.blend_target),
+                        },
+                    ],
+                },
+            ),
         }
     }
 }
@@ -656,7 +665,8 @@ impl SmaaTarget {
     pub fn resize(&mut self, device: &wgpu::Device, width: u32, height: u32) {
         if let Some(ref mut inner) = self.inner {
             inner.targets = Targets::new(device, width, height, inner.format);
-            inner.bind_groups = BindGroups::new(device, &inner.layouts, &inner.resources, &inner.targets);
+            inner.bind_groups =
+                BindGroups::new(device, &inner.layouts, &inner.resources, &inner.targets);
         }
     }
 
@@ -702,8 +712,8 @@ impl<'a> Drop for SmaaFrame<'a> {
                 });
             {
                 let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                    color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
-                        attachment: &inner.targets.edges_target,
+                    color_attachments: &[wgpu::RenderPassColorAttachment {
+                        view: &inner.targets.edges_target,
                         resolve_target: None,
                         ops: wgpu::Operations {
                             load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
@@ -719,8 +729,8 @@ impl<'a> Drop for SmaaFrame<'a> {
             }
             {
                 let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                    color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
-                        attachment: &inner.targets.blend_target,
+                    color_attachments: &[wgpu::RenderPassColorAttachment {
+                        view: &inner.targets.blend_target,
                         resolve_target: None,
                         ops: wgpu::Operations {
                             load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
@@ -736,8 +746,8 @@ impl<'a> Drop for SmaaFrame<'a> {
             }
             {
                 let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                    color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
-                        attachment: self.output_view,
+                    color_attachments: &[wgpu::RenderPassColorAttachment {
+                        view: self.output_view,
                         resolve_target: None,
                         ops: wgpu::Operations {
                             load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
