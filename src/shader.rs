@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+
+use naga::FastHashMap;
+
 #[allow(dead_code)]
 pub enum ShaderQuality {
     Low,
@@ -184,21 +188,35 @@ impl ShaderSource {
     ) -> Result<wgpu::ShaderModule, anyhow::Error> {
         let source = self.get_stage(stage);
 
-        let module = naga::front::glsl::parse_str(
-            &source,
-            "main",
+        let mut entry_points = FastHashMap::default();
+        entry_points.insert(
+            "main".to_string(),
             if stage.is_vertex_shader() {
                 naga::ShaderStage::Vertex
             } else {
                 naga::ShaderStage::Fragment
             },
-            Default::default(),
+        );
+
+        let module = naga::front::glsl::parse_str(
+            &source,
+            &naga::front::glsl::Options {
+                entry_points,
+                defines: Default::default(),
+            },
         )?;
+
+        let module_info = naga::valid::Validator::new(
+            naga::valid::ValidationFlags::empty(),
+            naga::valid::Capabilities::empty(),
+        )
+        .validate(&module)
+        .unwrap();
 
         let spirv = naga::back::spv::write_vec(
             &module,
-            naga::back::spv::WriterFlags::NONE,
-            vec![naga::back::spv::Capability::Shader].into_iter().collect(),
+            &module_info,
+            &Default::default(),
         )?;
 
         Ok(device.create_shader_module(&wgpu::ShaderModuleDescriptor {
