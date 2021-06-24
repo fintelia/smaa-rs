@@ -12,7 +12,7 @@
 //! // Initialize wgpu
 //! let event_loop = EventLoop::new();
 //! let window = winit::window::Window::new(&event_loop).unwrap();
-//! let instance = wgpu::Instance::new(wgpu::BackendBit::all());
+//! let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
 //! let surface = unsafe { instance.create_surface(&window) };
 //! let adapter = instance.request_adapter(&Default::default()).await.unwrap();
 //! let (device, queue) = adapter.request_device(&Default::default(), None).await?;
