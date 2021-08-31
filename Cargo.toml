@@ -8,10 +8,12 @@ keywords = ["graphics", "antialiasing", "SMAA"]
 categories = ["rendering", "game-engines"]
 license = "MIT"
 edition = "2018"
+resolver = "2"
 
 [dependencies]
+env_logger = "0.9.0"
 shaderc = "0.7.2"
-wgpu = "0.9.0"
+wgpu = { version = "0.10.1", features = ["spirv"] }
 
 [dev-dependencies]
 winit = "0.24.0"

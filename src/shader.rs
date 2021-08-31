@@ -205,7 +205,6 @@ impl ShaderSource {
         device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some(name),
             source: wgpu::ShaderSource::SpirV(spirv.into()),
-            flags: wgpu::ShaderFlags::empty(),
         })
     }
 }
