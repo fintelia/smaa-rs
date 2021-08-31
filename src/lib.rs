@@ -705,63 +705,63 @@ impl<'a> std::ops::Deref for SmaaFrame<'a> {
 impl<'a> Drop for SmaaFrame<'a> {
     fn drop(&mut self) {
         if let Some(ref mut inner) = self.target.inner {
-            // let mut encoder = self
-            //     .device
-            //     .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            //         label: Some("smaa.command_encoder"),
-            //     });
-            // {
-            //     let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            //         color_attachments: &[wgpu::RenderPassColorAttachment {
-            //             view: &inner.targets.edges_target,
-            //             resolve_target: None,
-            //             ops: wgpu::Operations {
-            //                 load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-            //                 store: true,
-            //             },
-            //         }],
-            //         depth_stencil_attachment: None,
-            //         label: Some("smaa.render_pass.edge_detect"),
-            //     });
-            //     rpass.set_pipeline(&inner.pipelines.edge_detect);
-            //     rpass.set_bind_group(0, &inner.bind_groups.edge_detect_bind_group, &[]);
-            //     rpass.draw(0..3, 0..1);
-            // }
-            // {
-            //     let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            //         color_attachments: &[wgpu::RenderPassColorAttachment {
-            //             view: &inner.targets.blend_target,
-            //             resolve_target: None,
-            //             ops: wgpu::Operations {
-            //                 load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-            //                 store: true,
-            //             },
-            //         }],
-            //         depth_stencil_attachment: None,
-            //         label: Some("smaa.render_pass.blend_weight"),
-            //     });
-            //     rpass.set_pipeline(&inner.pipelines.blend_weight);
-            //     rpass.set_bind_group(0, &inner.bind_groups.blend_weight_bind_group, &[]);
-            //     rpass.draw(0..3, 0..1);
-            // }
-            // {
-            //     let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            //         color_attachments: &[wgpu::RenderPassColorAttachment {
-            //             view: self.output_view,
-            //             resolve_target: None,
-            //             ops: wgpu::Operations {
-            //                 load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-            //                 store: true,
-            //             },
-            //         }],
-            //         depth_stencil_attachment: None,
-            //         label: Some("smaa.render_pass.neighborhood_blending"),
-            //     });
-            //     rpass.set_pipeline(&inner.pipelines.neighborhood_blending);
-            //     rpass.set_bind_group(0, &inner.bind_groups.neighborhood_blending_bind_group, &[]);
-            //     rpass.draw(0..3, 0..1);
-            // }
-            // self.queue.submit(Some(encoder.finish()));
+            let mut encoder = self
+                .device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("smaa.command_encoder"),
+                });
+            {
+                let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    color_attachments: &[wgpu::RenderPassColorAttachment {
+                        view: &inner.targets.edges_target,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                            store: true,
+                        },
+                    }],
+                    depth_stencil_attachment: None,
+                    label: Some("smaa.render_pass.edge_detect"),
+                });
+                rpass.set_pipeline(&inner.pipelines.edge_detect);
+                rpass.set_bind_group(0, &inner.bind_groups.edge_detect_bind_group, &[]);
+                rpass.draw(0..3, 0..1);
+            }
+            {
+                let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    color_attachments: &[wgpu::RenderPassColorAttachment {
+                        view: &inner.targets.blend_target,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                            store: true,
+                        },
+                    }],
+                    depth_stencil_attachment: None,
+                    label: Some("smaa.render_pass.blend_weight"),
+                });
+                rpass.set_pipeline(&inner.pipelines.blend_weight);
+                rpass.set_bind_group(0, &inner.bind_groups.blend_weight_bind_group, &[]);
+                rpass.draw(0..3, 0..1);
+            }
+            {
+                let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    color_attachments: &[wgpu::RenderPassColorAttachment {
+                        view: self.output_view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                            store: true,
+                        },
+                    }],
+                    depth_stencil_attachment: None,
+                    label: Some("smaa.render_pass.neighborhood_blending"),
+                });
+                rpass.set_pipeline(&inner.pipelines.neighborhood_blending);
+                rpass.set_bind_group(0, &inner.bind_groups.neighborhood_blending_bind_group, &[]);
+                rpass.draw(0..3, 0..1);
+            }
+            self.queue.submit(Some(encoder.finish()));
         }
     }
 }

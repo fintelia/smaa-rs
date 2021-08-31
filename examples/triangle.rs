@@ -37,7 +37,7 @@ fn main() {
         window.inner_size().width,
         window.inner_size().height,
         swapchain_format,
-        SmaaMode::Disabled,
+        SmaaMode::Smaa1X,
     );
 
     // Prepare scene
@@ -88,27 +88,23 @@ fn main() {
                 {
                     let frame = smaa_target.start_frame(&device, &queue, &output_view);
 
-                    let mut e2 =
-                    device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-                    queue.submit(Some(e2.finish()));
-
                     let mut encoder =
                         device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
                     {
-                        // let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                        //     label: None,
-                        //     color_attachments: &[wgpu::RenderPassColorAttachment {
-                        //         view: &*frame,
-                        //         resolve_target: None,
-                        //         ops: wgpu::Operations {
-                        //             load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
-                        //             store: true,
-                        //         },
-                        //     }],
-                        //     depth_stencil_attachment: None,
-                        // });
-                        // rpass.set_pipeline(&render_pipeline);
-                        // rpass.draw(0..3, 0..1);
+                        let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                            label: None,
+                            color_attachments: &[wgpu::RenderPassColorAttachment {
+                                view: &*frame,
+                                resolve_target: None,
+                                ops: wgpu::Operations {
+                                    load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
+                                    store: true,
+                                },
+                            }],
+                            depth_stencil_attachment: None,
+                        });
+                        rpass.set_pipeline(&render_pipeline);
+                        rpass.draw(0..3, 0..1);
                     }
                     queue.submit(Some(encoder.finish()));
                 }
