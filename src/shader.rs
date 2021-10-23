@@ -202,10 +202,11 @@ impl ShaderSource {
             .as_binary()
             .to_vec();
 
-        device.create_shader_module(&wgpu::ShaderModuleDescriptor {
-            label: Some(name),
-            source: wgpu::ShaderSource::SpirV(spirv.into()),
-            flags: wgpu::ShaderFlags::empty(),
-        })
+        unsafe {
+            device.create_shader_module_spirv(&wgpu::ShaderModuleDescriptorSpirV {
+                label: Some(name),
+                source: (spirv.into()),
+            })
+        }
     }
 }

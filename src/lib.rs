@@ -19,7 +19,7 @@
 //! let swapchain_format = adapter.get_swap_chain_preferred_format(&surface)
 //!     .unwrap_or(wgpu::TextureFormat::Bgra8UnormSrgb);
 //! let mut swap_chain = device.create_swap_chain(&surface, &wgpu::SwapChainDescriptor {
-//!     usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
+//!     usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
 //!     format: swapchain_format,
 //!     width: window.inner_size().width,
 //!     height: window.inner_size().height,
@@ -113,7 +113,7 @@ impl BindGroupLayouts {
                     entries: &[
                         wgpu::BindGroupLayoutEntry {
                             binding: 0,
-                            visibility: wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
                             ty: wgpu::BindingType::Sampler {
                                 filtering: true,
                                 comparison: false,
@@ -122,7 +122,7 @@ impl BindGroupLayouts {
                         },
                         wgpu::BindGroupLayoutEntry {
                             binding: 1,
-                            visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
                             ty: wgpu::BindingType::Buffer {
                                 ty: wgpu::BufferBindingType::Uniform,
                                 has_dynamic_offset: false,
@@ -132,7 +132,7 @@ impl BindGroupLayouts {
                         },
                         wgpu::BindGroupLayoutEntry {
                             binding: 2,
-                            visibility: wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
                                 sample_type: wgpu::TextureSampleType::Float { filterable: true },
                                 view_dimension: wgpu::TextureViewDimension::D2,
@@ -149,7 +149,7 @@ impl BindGroupLayouts {
                     entries: &[
                         wgpu::BindGroupLayoutEntry {
                             binding: 0,
-                            visibility: wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
                             ty: wgpu::BindingType::Sampler {
                                 filtering: true,
                                 comparison: false,
@@ -158,7 +158,7 @@ impl BindGroupLayouts {
                         },
                         wgpu::BindGroupLayoutEntry {
                             binding: 1,
-                            visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
                             ty: wgpu::BindingType::Buffer {
                                 ty: wgpu::BufferBindingType::Uniform,
                                 has_dynamic_offset: false,
@@ -168,7 +168,7 @@ impl BindGroupLayouts {
                         },
                         wgpu::BindGroupLayoutEntry {
                             binding: 2,
-                            visibility: wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
                                 sample_type: wgpu::TextureSampleType::Float { filterable: true },
                                 view_dimension: wgpu::TextureViewDimension::D2,
@@ -178,7 +178,7 @@ impl BindGroupLayouts {
                         },
                         wgpu::BindGroupLayoutEntry {
                             binding: 3,
-                            visibility: wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
                                 sample_type: wgpu::TextureSampleType::Float { filterable: true },
                                 view_dimension: wgpu::TextureViewDimension::D2,
@@ -188,7 +188,7 @@ impl BindGroupLayouts {
                         },
                         wgpu::BindGroupLayoutEntry {
                             binding: 4,
-                            visibility: wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
                                 sample_type: wgpu::TextureSampleType::Float { filterable: true },
                                 view_dimension: wgpu::TextureViewDimension::D2,
@@ -205,7 +205,7 @@ impl BindGroupLayouts {
                     entries: &[
                         wgpu::BindGroupLayoutEntry {
                             binding: 0,
-                            visibility: wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
                             ty: wgpu::BindingType::Sampler {
                                 filtering: true,
                                 comparison: false,
@@ -214,7 +214,7 @@ impl BindGroupLayouts {
                         },
                         wgpu::BindGroupLayoutEntry {
                             binding: 1,
-                            visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
                             ty: wgpu::BindingType::Buffer {
                                 ty: wgpu::BufferBindingType::Uniform,
                                 has_dynamic_offset: false,
@@ -224,7 +224,7 @@ impl BindGroupLayouts {
                         },
                         wgpu::BindGroupLayoutEntry {
                             binding: 2,
-                            visibility: wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
                                 sample_type: wgpu::TextureSampleType::Float { filterable: true },
                                 view_dimension: wgpu::TextureViewDimension::D2,
@@ -234,7 +234,7 @@ impl BindGroupLayouts {
                         },
                         wgpu::BindGroupLayoutEntry {
                             binding: 3,
-                            visibility: wgpu::ShaderStage::FRAGMENT,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
                                 sample_type: wgpu::TextureSampleType::Float { filterable: true },
                                 view_dimension: wgpu::TextureViewDimension::D2,
@@ -286,7 +286,7 @@ impl Pipelines {
                     color: wgpu::BlendComponent::REPLACE,
                     alpha: wgpu::BlendComponent::REPLACE,
                 }),
-                write_mask: wgpu::ColorWrite::ALL,
+                write_mask: wgpu::ColorWrites::ALL,
             }],
         };
         let edge_detect = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -326,7 +326,7 @@ impl Pipelines {
                     color: wgpu::BlendComponent::REPLACE,
                     alpha: wgpu::BlendComponent::REPLACE,
                 }),
-                write_mask: wgpu::ColorWrite::ALL,
+                write_mask: wgpu::ColorWrites::ALL,
             }],
         };
         let blend_weight = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -367,7 +367,7 @@ impl Pipelines {
                     color: wgpu::BlendComponent::REPLACE,
                     alpha: wgpu::BlendComponent::REPLACE,
                 }),
-                write_mask: wgpu::ColorWrite::ALL,
+                write_mask: wgpu::ColorWrites::ALL,
             }],
         };
         let neighborhood_blending =
@@ -406,7 +406,7 @@ impl Targets {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: wgpu::TextureFormat::Rgba8Unorm,
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT | wgpu::TextureUsage::SAMPLED,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
             label: None,
         };
 
@@ -421,7 +421,7 @@ impl Targets {
         }
         let rt_uniforms = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("smaa.uniforms"),
-            usage: wgpu::BufferUsage::UNIFORM,
+            usage: wgpu::BufferUsages::UNIFORM,
             contents: &uniform_data,
         });
 
@@ -463,7 +463,7 @@ impl Targets {
 impl Resources {
     fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
         let area_texture = device.create_texture_with_data(
-            &queue,
+            queue,
             &wgpu::TextureDescriptor {
                 label: Some("smaa.texture.area"),
                 size: wgpu::Extent3d {
@@ -475,13 +475,13 @@ impl Resources {
                 sample_count: 1,
                 dimension: wgpu::TextureDimension::D2,
                 format: wgpu::TextureFormat::Rg8Unorm,
-                usage: wgpu::TextureUsage::SAMPLED | wgpu::TextureUsage::COPY_DST,
+                usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
             },
             &AREATEX_BYTES,
         );
 
         let search_texture = device.create_texture_with_data(
-            &queue,
+            queue,
             &wgpu::TextureDescriptor {
                 label: Some("smaa.texture.search"),
                 size: wgpu::Extent3d {
@@ -493,7 +493,7 @@ impl Resources {
                 sample_count: 1,
                 dimension: wgpu::TextureDimension::D2,
                 format: wgpu::TextureFormat::R8Unorm,
-                usage: wgpu::TextureUsage::SAMPLED | wgpu::TextureUsage::COPY_DST,
+                usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
             },
             &SEARCHTEX_BYTES,
         );

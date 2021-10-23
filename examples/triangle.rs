@@ -44,7 +44,6 @@ fn main() {
     let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
         label: None,
         source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!("shader.wgsl"))),
-        flags: wgpu::ShaderFlags::all(),
     });
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
@@ -78,21 +77,23 @@ fn main() {
                 ..
             } => {
                 // Recreate the swap chain with the new size
-                swap_chain = device.create_swap_chain(
-                    &surface,
-                    &wgpu::SwapChainDescriptor {
-                        usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
+                surface.configure(
+                    &device,
+                    &wgpu::SurfaceConfiguration {
+                        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
                         format: swapchain_format,
-                        width: size.width,
-                        height: size.height,
+                        width: window.inner_size().width,
+                        height: window.inner_size().height,
                         present_mode: wgpu::PresentMode::Mailbox,
                     },
                 );
+
                 smaa_target.resize(&device, size.width, size.height);
             }
             Event::RedrawRequested(_) => {
-                let output_frame = swap_chain.get_current_frame().unwrap().output;
-                let frame = smaa_target.start_frame(&device, &queue, &output_frame.view);
+                let output_frame = surface.get_current_texture().unwrap();
+                let frame_view = output_frame.texture.create_view(&Default::default());
+                let frame = smaa_target.start_frame(&device, &queue, &frame_view);
 
                 let mut encoder =
                     device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -113,6 +114,11 @@ fn main() {
                     rpass.draw(0..3, 0..1);
                 }
                 queue.submit(Some(encoder.finish()));
+
+                // We have to call all `queue.submit()` before presentation
+                drop(frame);
+
+                output_frame.present();
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
