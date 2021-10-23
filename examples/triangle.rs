@@ -10,19 +10,28 @@ fn main() {
     // Initialize wgpu
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = winit::window::Window::new(&event_loop).unwrap();
-    let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
     let surface = unsafe { instance.create_surface(&window) };
     let adapter =
         futures::executor::block_on(instance.request_adapter(&Default::default())).unwrap();
-    let (device, queue) =
-        futures::executor::block_on(adapter.request_device(&Default::default(), None)).unwrap();
-    let swapchain_format = adapter
-        .get_swap_chain_preferred_format(&surface)
+    let features = adapter.features();
+    let limits = adapter.limits();
+    let (device, queue) = futures::executor::block_on(adapter.request_device(
+        &wgpu::DeviceDescriptor {
+            label: None,
+            features,
+            limits,
+        },
+        None,
+    ))
+    .unwrap();
+    let swapchain_format = surface
+        .get_preferred_format(&adapter)
         .unwrap_or(wgpu::TextureFormat::Bgra8UnormSrgb);
-    let mut swap_chain = device.create_swap_chain(
-        &surface,
-        &wgpu::SwapChainDescriptor {
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
+    surface.configure(
+        &device,
+        &wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: swapchain_format,
             width: window.inner_size().width,
             height: window.inner_size().height,
@@ -115,7 +124,7 @@ fn main() {
                 }
                 queue.submit(Some(encoder.finish()));
 
-                // We have to call all `queue.submit()` before presentation
+                // We have to call all `queue.submit()` before presentation.
                 drop(frame);
 
                 output_frame.present();
