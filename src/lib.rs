@@ -12,19 +12,20 @@
 //! // Initialize wgpu
 //! let event_loop = EventLoop::new();
 //! let window = winit::window::Window::new(&event_loop).unwrap();
-//! let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+//! let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
 //! let surface = unsafe { instance.create_surface(&window) };
 //! let adapter = instance.request_adapter(&Default::default()).await.unwrap();
 //! let (device, queue) = adapter.request_device(&Default::default(), None).await?;
-//! let swapchain_format = adapter.get_swap_chain_preferred_format(&surface)
+//! let swapchain_format = surface.get_preferred_format(&adapter)
 //!     .unwrap_or(wgpu::TextureFormat::Bgra8UnormSrgb);
-//! let mut swap_chain = device.create_swap_chain(&surface, &wgpu::SwapChainDescriptor {
+//! let mut config = wgpu::SurfaceConfiguration {
 //!     usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
 //!     format: swapchain_format,
 //!     width: window.inner_size().width,
 //!     height: window.inner_size().height,
 //!     present_mode: wgpu::PresentMode::Mailbox,
-//! });
+//! };
+//! surface.configure(&device, &config);
 //!
 //! // Create SMAA target
 //! let mut smaa_target = SmaaTarget::new(
@@ -41,11 +42,16 @@
 //! #    *control_flow = winit::event_loop::ControlFlow::Exit;
 //!     match event {
 //!         Event::RedrawRequested(_) => {
-//!             let output_frame = swap_chain.get_current_frame().unwrap().output;
-//!             let frame = smaa_target.start_frame(&device, &queue, &output_frame.view);
+//!             let output_frame = surface.get_current_texture().unwrap();
+//!             let output_view = output_frame.texture.create_view(&Default::default());
+//!             {
+//!                 let frame = smaa_target.start_frame(&device, &queue, &output_view);
 //!
-//!             // Render the scene into `*frame`.
-//!             // [...]
+//!                 // Render the scene into `*frame`.
+//!                 // [...]
+//!
+//!             }
+//!             output_frame.present();
 //!         }
 //!         _ => {}
 //!     }

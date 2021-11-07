@@ -83,7 +83,7 @@ fn main() {
                 smaa_target.resize(&device, size.width, size.height);
             }
             Event::RedrawRequested(_) => {
-                let output_frame = surface.get_current_frame().unwrap().output;
+                let output_frame = surface.get_current_texture().unwrap();
                 let output_view = output_frame.texture.create_view(&Default::default());
                 {
                     let frame = smaa_target.start_frame(&device, &queue, &output_view);
@@ -108,6 +108,7 @@ fn main() {
                     }
                     queue.submit(Some(encoder.finish()));
                 }
+                output_frame.present();
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,

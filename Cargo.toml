@@ -12,9 +12,9 @@ resolver = "2"
 
 [dependencies]
 env_logger = "0.9.0"
-shaderc = "0.7.2"
-wgpu = { version = "0.10.1", features = ["spirv"] }
+shaderc = "0.7.3"
+wgpu = { version = "0.11", features = ["spirv"] }
 
 [dev-dependencies]
-winit = "0.24.0"
-futures = "0.3.14"
+winit = "0.25.0"
+futures = "0.3.16"
