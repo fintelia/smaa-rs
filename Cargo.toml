@@ -1,14 +1,13 @@
 [package]
 name = "smaa"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Jonathan Behrens <fintelia@gmail.com>"]
 description = "A library for post process antialiasing using SMAA"
 repository = "https://github.com/fintelia/gfx_smaa"
 keywords = ["graphics", "antialiasing", "SMAA"]
 categories = ["rendering", "game-engines"]
 license = "MIT"
-edition = "2018"
-resolver = "2"
+edition = "2021"
 
 [dependencies]
 env_logger = "0.9.0"
