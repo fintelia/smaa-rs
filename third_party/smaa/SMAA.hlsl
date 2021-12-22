@@ -630,8 +630,10 @@ void SMAAMovc(bool2 cond, inout float2 variable, float2 value) {
 }
 
 void SMAAMovc(bool4 cond, inout float4 variable, float4 value) {
-    SMAAMovc(cond.xy, variable.xy, value.xy);
-    SMAAMovc(cond.zw, variable.zw, value.zw);
+    SMAA_FLATTEN if (cond.x) variable.x = value.x;
+    SMAA_FLATTEN if (cond.y) variable.y = value.y;
+    SMAA_FLATTEN if (cond.z) variable.z = value.z;
+    SMAA_FLATTEN if (cond.w) variable.w = value.w;
 }
 
 
@@ -712,9 +714,9 @@ float2 SMAALumaEdgeDetectionPS(float2 texcoord,
     delta.xy = abs(L - float2(Lleft, Ltop));
     float2 edges = step(threshold, delta.xy);
 
-    // Then discard if there is no edge:
-    if (dot(edges, float2(1.0, 1.0)) == 0.0)
-        discard;
+    // // Then discard if there is no edge:
+    // if (dot(edges, float2(1.0, 1.0)) == 0.0)
+    //     discard;
 
     // Calculate right and bottom deltas:
     float Lright = dot(SMAASamplePoint(colorTex, offset[1].xy).rgb, weights);
@@ -774,9 +776,9 @@ float2 SMAAColorEdgeDetectionPS(float2 texcoord,
     // We do the usual threshold:
     float2 edges = step(threshold, delta.xy);
 
-    // Then discard if there is no edge:
-    if (dot(edges, float2(1.0, 1.0)) == 0.0)
-        discard;
+    // // Then discard if there is no edge:
+    // if (dot(edges, float2(1.0, 1.0)) == 0.0)
+    //     discard;
 
     // Calculate right and bottom deltas:
     float3 Cright = SMAASamplePoint(colorTex, offset[1].xy).rgb;
@@ -1200,7 +1202,9 @@ float4 SMAABlendingWeightCalculationPS(float2 texcoord,
 
         // Fix corners:
         coords.y = texcoord.y;
-        SMAADetectHorizontalCornerPattern(SMAATexturePass2D(edgesTex), weights.rg, coords.xyzy, d);
+        float2 weights_rg = weights.rg;
+        SMAADetectHorizontalCornerPattern(SMAATexturePass2D(edgesTex), weights_rg, coords.xyzy, d);
+        weights.rg = weights_rg;
 
         #if !defined(SMAA_DISABLE_DIAG_DETECTION)
         } else
@@ -1240,7 +1244,9 @@ float4 SMAABlendingWeightCalculationPS(float2 texcoord,
 
         // Fix corners:
         coords.x = texcoord.x;
-        SMAADetectVerticalCornerPattern(SMAATexturePass2D(edgesTex), weights.ba, coords.xyxz, d);
+        float2 weights_ba = weights.ba;
+        SMAADetectVerticalCornerPattern(SMAATexturePass2D(edgesTex), weights_ba, coords.xyxz, d);
+        weights.ba = weights_ba;
     }
 
     return weights;

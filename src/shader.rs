@@ -56,7 +56,7 @@ impl ShaderStage {
                      if(gl_VertexIndex == 0) gl_Position = vec4(-1, -1, 1, 1);
                      if(gl_VertexIndex == 1) gl_Position = vec4(-1,  3, 1, 1);
         	         if(gl_VertexIndex == 2) gl_Position = vec4( 3, -1, 1, 1);
-                     texcoord = gl_Position.xy * vec2(0.5, -0.5) + vec2(0.5);
+                     texcoord = gl_Position.xy * vec2(0.5) + vec2(0.5);
                      float4 offset[3];
                      SMAAEdgeDetectionVS(texcoord, offset);
                      offset0=offset[0];
@@ -74,7 +74,7 @@ impl ShaderStage {
                      if(gl_VertexIndex == 0) gl_Position = vec4(-1, -1, 1, 1);
                      if(gl_VertexIndex == 1) gl_Position = vec4(-1,  3, 1, 1);
         	         if(gl_VertexIndex == 2) gl_Position = vec4( 3, -1, 1, 1);
-                     texcoord = gl_Position.xy * vec2(0.5, -0.5) + vec2(0.5);
+                     texcoord = gl_Position.xy * vec2(0.5) + vec2(0.5);
                      float4 offset[3];
                      SMAABlendingWeightCalculationVS(texcoord, pixcoord, offset);
                      offset0=offset[0];
@@ -89,7 +89,7 @@ impl ShaderStage {
                      if(gl_VertexIndex == 0) gl_Position = vec4(-1, -1, 1, 1);
                      if(gl_VertexIndex == 1) gl_Position = vec4(-1,  3, 1, 1);
         	         if(gl_VertexIndex == 2) gl_Position = vec4( 3, -1, 1, 1);
-                     texcoord = gl_Position.xy * vec2(0.5, -0.5) + vec2(0.5);
+                     texcoord = gl_Position.xy * vec2(0.5) + vec2(0.5);
                      SMAANeighborhoodBlendingVS(texcoord, offset);
                  }"
             }
@@ -101,8 +101,11 @@ impl ShaderStage {
                  layout(set = 0, binding = 2) uniform texture2D colorTex;
                  layout(location = 0) out float2 OutColor;
                  void main() {
-                     float4 offset[3] = float4[](offset0, offset1, offset2);
-                     OutColor = SMAALumaEdgeDetectionPS(texcoord, offset, colorTex);
+                    float4 offset[3];
+                    offset[0] = offset0;
+                    offset[1] = offset1;
+                    offset[2] = offset2;
+                    OutColor = SMAALumaEdgeDetectionPS(texcoord, offset, colorTex);
                  }"
             }
             ShaderStage::BlendingWeightPS => {
@@ -117,7 +120,10 @@ impl ShaderStage {
                  layout(location = 0) out float4 OutColor;
                  void main() {
                      vec4 subsampleIndices = vec4(0);
-                     float4 offset[3] = float4[](offset0, offset1, offset2);
+                     float4 offset[3];
+                     offset[0] = offset0;
+                     offset[1] = offset1;
+                     offset[2] = offset2;
                      OutColor = SMAABlendingWeightCalculationPS(texcoord, pixcoord, offset,
                          edgesTex, areaTex, searchTex, subsampleIndices);
                  }"
