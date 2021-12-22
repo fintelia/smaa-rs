@@ -56,7 +56,7 @@ impl ShaderStage {
                      if(gl_VertexIndex == 0) gl_Position = vec4(-1, -1, 1, 1);
                      if(gl_VertexIndex == 1) gl_Position = vec4(-1,  3, 1, 1);
         	         if(gl_VertexIndex == 2) gl_Position = vec4( 3, -1, 1, 1);
-                     texcoord = gl_Position.xy * vec2(0.5) + vec2(0.5);
+                     texcoord = gl_Position.xy * vec2(0.5, -0.5) + vec2(0.5);
                      float4 offset[3];
                      SMAAEdgeDetectionVS(texcoord, offset);
                      offset0=offset[0];
@@ -74,7 +74,7 @@ impl ShaderStage {
                      if(gl_VertexIndex == 0) gl_Position = vec4(-1, -1, 1, 1);
                      if(gl_VertexIndex == 1) gl_Position = vec4(-1,  3, 1, 1);
         	         if(gl_VertexIndex == 2) gl_Position = vec4( 3, -1, 1, 1);
-                     texcoord = gl_Position.xy * vec2(0.5) + vec2(0.5);
+                     texcoord = gl_Position.xy * vec2(0.5, -0.5) + vec2(0.5);
                      float4 offset[3];
                      SMAABlendingWeightCalculationVS(texcoord, pixcoord, offset);
                      offset0=offset[0];
@@ -89,7 +89,7 @@ impl ShaderStage {
                      if(gl_VertexIndex == 0) gl_Position = vec4(-1, -1, 1, 1);
                      if(gl_VertexIndex == 1) gl_Position = vec4(-1,  3, 1, 1);
         	         if(gl_VertexIndex == 2) gl_Position = vec4( 3, -1, 1, 1);
-                     texcoord = gl_Position.xy * vec2(0.5) + vec2(0.5);
+                     texcoord = gl_Position.xy * vec2(0.5, -0.5) + vec2(0.5);
                      SMAANeighborhoodBlendingVS(texcoord, offset);
                  }"
             }
@@ -190,60 +190,17 @@ impl ShaderSource {
         stage: ShaderStage,
         name: &'static str,
     ) -> wgpu::ShaderModule {
-        let source = self.get_stage(stage);
-
-        std::fs::write(name, &source).unwrap();
-
-        let mut entry_points = FastHashMap::default();
-        entry_points.insert(
-            "main".to_string(),
-            if stage.is_vertex_shader() {
-                naga::ShaderStage::Vertex
-            } else {
-                naga::ShaderStage::Fragment
-            },
-        );
-
-        let mut parser = naga::front::glsl::Parser::default();
-        let module = parser
-            .parse(
-                &naga::front::glsl::Options {
-                    defines: Default::default(),
-                    stage: if stage.is_vertex_shader() {
-                        naga::ShaderStage::Vertex
-                    } else {
-                        naga::ShaderStage::Fragment
-                    },
-                },
-                &source,
-            )
-            .unwrap();
-
-        let module_info = naga::valid::Validator::new(
-            naga::valid::ValidationFlags::empty(),
-            naga::valid::Capabilities::empty(),
-        )
-        .validate(&module)
-        .unwrap();
-
-        let spirv = naga::back::spv::write_vec(
-            &module,
-            &module_info,
-            &Default::default(),
-            Some(&naga::back::spv::PipelineOptions {
-                entry_point: "main".to_string(),
-                shader_stage: if stage.is_vertex_shader() {
+        device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+            label: Some(name),
+            source: wgpu::ShaderSource::Glsl {
+                shader: self.get_stage(stage).into(),
+                stage: if stage.is_vertex_shader() {
                     naga::ShaderStage::Vertex
                 } else {
                     naga::ShaderStage::Fragment
                 },
-            }),
-        )
-        .unwrap();
-
-        device.create_shader_module(&wgpu::ShaderModuleDescriptor {
-            label: Some(name),
-            source: wgpu::ShaderSource::SpirV(spirv.into()),
+                defines: FastHashMap::default(),
+            }
         })
     }
 }

@@ -7,8 +7,6 @@ use winit::{
 };
 
 fn main() {
-    env_logger::init();
-
     // Initialize wgpu
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = winit::window::Window::new(&event_loop).unwrap();
