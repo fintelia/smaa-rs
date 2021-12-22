@@ -1,19 +1,20 @@
 [package]
 name = "smaa"
-version = "0.3.0"
+version = "0.5.0"
 authors = ["Jonathan Behrens <fintelia@gmail.com>"]
 description = "A library for post process antialiasing using SMAA"
 repository = "https://github.com/fintelia/gfx_smaa"
 keywords = ["graphics", "antialiasing", "SMAA"]
 categories = ["rendering", "game-engines"]
 license = "MIT"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 anyhow = "1.0.38"
-naga = { git = "https://github.com/gfx-rs/naga", features = ["glsl-in", "spv-out"] }
-wgpu = "0.9.0"
+env_logger = "0.9.0"
+naga = { version = "0.8.0", features = ["glsl-in", "spv-out"] }
+wgpu = { version = "0.12", features = ["spirv"] }
 
 [dev-dependencies]
-winit = "0.24.0"
-futures = "0.3.14"
+winit = "0.26.0"
+futures = "0.3.16"

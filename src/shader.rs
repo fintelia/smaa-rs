@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use naga::FastHashMap;
 
 #[allow(dead_code)]
@@ -200,13 +198,20 @@ impl ShaderSource {
             },
         );
 
-        let module = naga::front::glsl::parse_str(
-            &source,
-            &naga::front::glsl::Options {
-                entry_points,
-                defines: Default::default(),
-            },
-        ).unwrap();
+        let mut parser = naga::front::glsl::Parser::default();
+        let module = parser
+            .parse(
+                &naga::front::glsl::Options {
+                    defines: Default::default(),
+                    stage: if stage.is_vertex_shader() {
+                        naga::ShaderStage::Vertex
+                    } else {
+                        naga::ShaderStage::Fragment
+                    },
+                },
+                &source,
+            )
+            .unwrap();
 
         let module_info = naga::valid::Validator::new(
             naga::valid::ValidationFlags::empty(),
@@ -219,12 +224,20 @@ impl ShaderSource {
             &module,
             &module_info,
             &Default::default(),
-        ).unwrap();
+            Some(&naga::back::spv::PipelineOptions {
+                entry_point: "main".to_string(),
+                shader_stage: if stage.is_vertex_shader() {
+                    naga::ShaderStage::Vertex
+                } else {
+                    naga::ShaderStage::Fragment
+                },
+            }),
+        )
+        .unwrap();
 
         device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some(name),
             source: wgpu::ShaderSource::SpirV(spirv.into()),
-            flags: wgpu::ShaderFlags::empty(),
         })
     }
 }
