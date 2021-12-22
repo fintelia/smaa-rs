@@ -563,7 +563,7 @@ SamplerState PointSampler { Filter = MIN_MAG_MIP_POINT; AddressU = Clamp; Addres
 #define SMAASampleLevelZeroPoint(tex, coord) textureLod(sampler2D(tex, linearSampler), coord, 0.0)
 #define SMAASampleLevelZeroOffset(tex, coord, offset) textureLodOffset(sampler2D(tex, linearSampler), coord, 0.0, offset)
 #define SMAASample(tex, coord) texture(sampler2D(tex, linearSampler), coord)
-#define SMAASamplePoint(tex, coord) texture(sampler2D(tex, linearSampler), coord)
+#define SMAASamplePoint(tex, coord) textureLod(sampler2D(tex, linearSampler), coord, 0)
 #define SMAASampleOffset(tex, coord, offset) texture(sampler2D(tex, linearSampler), coord, offset)
 #define SMAA_FLATTEN
 #define SMAA_BRANCH
@@ -714,9 +714,9 @@ float2 SMAALumaEdgeDetectionPS(float2 texcoord,
     delta.xy = abs(L - float2(Lleft, Ltop));
     float2 edges = step(threshold, delta.xy);
 
-    // // Then discard if there is no edge:
-    // if (dot(edges, float2(1.0, 1.0)) == 0.0)
-    //     discard;
+    // Then discard if there is no edge:
+    if (dot(edges, float2(1.0, 1.0)) == 0.0)
+        discard;
 
     // Calculate right and bottom deltas:
     float Lright = dot(SMAASamplePoint(colorTex, offset[1].xy).rgb, weights);
@@ -776,9 +776,9 @@ float2 SMAAColorEdgeDetectionPS(float2 texcoord,
     // We do the usual threshold:
     float2 edges = step(threshold, delta.xy);
 
-    // // Then discard if there is no edge:
-    // if (dot(edges, float2(1.0, 1.0)) == 0.0)
-    //     discard;
+    // Then discard if there is no edge:
+    if (dot(edges, float2(1.0, 1.0)) == 0.0)
+        discard;
 
     // Calculate right and bottom deltas:
     float3 Cright = SMAASamplePoint(colorTex, offset[1].xy).rgb;
