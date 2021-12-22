@@ -84,29 +84,29 @@ fn main() {
             Event::RedrawRequested(_) => {
                 let output_frame = surface.get_current_texture().unwrap();
                 let output_view = output_frame.texture.create_view(&Default::default());
-                {
-                    let frame = smaa_target.start_frame(&device, &queue, &output_view);
+                let frame = smaa_target.start_frame(&device, &queue, &output_view);
 
-                    let mut encoder =
-                        device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-                    {
-                        let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                            label: None,
-                            color_attachments: &[wgpu::RenderPassColorAttachment {
-                                view: &*frame,
-                                resolve_target: None,
-                                ops: wgpu::Operations {
-                                    load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
-                                    store: true,
-                                },
-                            }],
-                            depth_stencil_attachment: None,
-                        });
-                        rpass.set_pipeline(&render_pipeline);
-                        rpass.draw(0..3, 0..1);
-                    }
-                    queue.submit(Some(encoder.finish()));
+                let mut encoder =
+                    device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+                {
+                    let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                        label: None,
+                        color_attachments: &[wgpu::RenderPassColorAttachment {
+                            view: &*frame,
+                            resolve_target: None,
+                            ops: wgpu::Operations {
+                                load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
+                                store: true,
+                            },
+                        }],
+                        depth_stencil_attachment: None,
+                    });
+                    rpass.set_pipeline(&render_pipeline);
+                    rpass.draw(0..3, 0..1);
                 }
+                queue.submit(Some(encoder.finish()));
+
+                frame.resolve();
                 output_frame.present();
             }
             Event::WindowEvent {
