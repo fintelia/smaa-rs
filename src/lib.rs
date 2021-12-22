@@ -44,13 +44,12 @@
 //!         Event::RedrawRequested(_) => {
 //!             let output_frame = surface.get_current_texture().unwrap();
 //!             let output_view = output_frame.texture.create_view(&Default::default());
-//!             {
-//!                 let frame = smaa_target.start_frame(&device, &queue, &output_view);
+//!             let smaa_frame = smaa_target.start_frame(&device, &queue, &output_view);
 //!
-//!                 // Render the scene into `*frame`.
-//!                 // [...]
+//!             // Render the scene into `*smaa_frame`.
+//!             // [...]
 //!
-//!             }
+//!             smaa_frame.resolve();
 //!             output_frame.present();
 //!         }
 //!         _ => {}
@@ -670,7 +669,7 @@ impl SmaaTarget {
         }
     }
 
-    /// Start rendering a frame. Dropping the returned frame object will resolve the scene into the provided output_view.
+    /// Start rendering a frame. Dropping or calling resolve() the returned frame object will resolve the scene into the provided output_view.
     pub fn start_frame<'a>(
         &'a mut self,
         device: &'a wgpu::Device,
@@ -692,6 +691,12 @@ pub struct SmaaFrame<'a> {
     device: &'a wgpu::Device,
     queue: &'a wgpu::Queue,
     output_view: &'a wgpu::TextureView,
+}
+impl<'a> SmaaFrame<'a> {
+    /// Resolve the multisampled image into the output texture.
+    pub fn resolve(self) {
+        std::mem::drop(self);
+    }
 }
 impl<'a> std::ops::Deref for SmaaFrame<'a> {
     type Target = wgpu::TextureView;
