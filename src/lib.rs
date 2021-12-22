@@ -120,10 +120,7 @@ impl BindGroupLayouts {
                         wgpu::BindGroupLayoutEntry {
                             binding: 0,
                             visibility: wgpu::ShaderStages::FRAGMENT,
-                            ty: wgpu::BindingType::Sampler {
-                                filtering: true,
-                                comparison: false,
-                            },
+                            ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                             count: None,
                         },
                         wgpu::BindGroupLayoutEntry {
@@ -156,10 +153,7 @@ impl BindGroupLayouts {
                         wgpu::BindGroupLayoutEntry {
                             binding: 0,
                             visibility: wgpu::ShaderStages::FRAGMENT,
-                            ty: wgpu::BindingType::Sampler {
-                                filtering: true,
-                                comparison: false,
-                            },
+                            ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                             count: None,
                         },
                         wgpu::BindGroupLayoutEntry {
@@ -212,10 +206,7 @@ impl BindGroupLayouts {
                         wgpu::BindGroupLayoutEntry {
                             binding: 0,
                             visibility: wgpu::ShaderStages::FRAGMENT,
-                            ty: wgpu::BindingType::Sampler {
-                                filtering: true,
-                                comparison: false,
-                            },
+                            ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                             count: None,
                         },
                         wgpu::BindGroupLayoutEntry {
@@ -303,6 +294,7 @@ impl Pipelines {
             primitive: Default::default(),
             multisample: Default::default(),
             depth_stencil: None,
+            multiview: None,
         });
 
         let blend_weight_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -343,6 +335,7 @@ impl Pipelines {
             primitive: Default::default(),
             multisample: Default::default(),
             depth_stencil: None,
+            multiview: None,
         });
 
         let neighborhood_blending_layout =
@@ -385,6 +378,7 @@ impl Pipelines {
                 primitive: Default::default(),
                 multisample: Default::default(),
                 depth_stencil: None,
+                multiview: None,
             });
 
         Self {
