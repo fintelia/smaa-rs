@@ -10,9 +10,16 @@ license = "MIT"
 edition = "2021"
 
 [dependencies]
+console_error_panic_hook = "0.1.7"
+console_log = "0.2.0"
 naga = "0.8.0"
-wgpu = { version = "0.12", features = ["glsl"] }
+wasm-bindgen-futures = "0.4.28"
+web-sys = "0.3.55"
+wgpu = { version = "0.12", features = ["glsl", "webgl"] }
 
 [dev-dependencies]
 winit = "0.26.0"
 futures = "0.3.16"
+
+#[patch.crates-io]
+#naga = { path = "../naga" }

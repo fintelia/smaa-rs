@@ -57,11 +57,9 @@ impl ShaderStage {
                      if(gl_VertexIndex == 1) gl_Position = vec4(-1,  3, 1, 1);
         	         if(gl_VertexIndex == 2) gl_Position = vec4( 3, -1, 1, 1);
                      texcoord = gl_Position.xy * vec2(0.5, -0.5) + vec2(0.5);
-                     float4 offset[3];
-                     SMAAEdgeDetectionVS(texcoord, offset);
-                     offset0=offset[0];
-                     offset1=offset[1];
-                     offset2=offset[2];
+                     offset0 = mad(SMAA_RT_METRICS.xyxy, float4(-1.0, 0.0, 0.0, -1.0), texcoord.xyxy);
+                     offset1 = mad(SMAA_RT_METRICS.xyxy, float4( 1.0, 0.0, 0.0,  1.0), texcoord.xyxy);
+                     offset2 = mad(SMAA_RT_METRICS.xyxy, float4(-2.0, 0.0, 0.0, -2.0), texcoord.xyxy);
                  }"
             }
             ShaderStage::BlendingWeightVS => {

@@ -5,17 +5,45 @@ use winit::{
     event::{Event, WindowEvent},
     event_loop::ControlFlow,
 };
+use winit::platform::web::WindowExtWebSys;
 
 fn main() {
+    println!("hello world!");
+    
     // Initialize wgpu
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = winit::window::Window::new(&event_loop).unwrap();
-    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
+
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+    console_log::init().expect("could not initialize logger");
+
+    web_sys::window()
+    .and_then(|win| win.document())
+    .and_then(|doc| doc.body())
+    .and_then(|body| {
+        let mut canvas = window.canvas();
+        canvas.set_height(64);
+        body.append_child(&web_sys::Element::from(canvas))
+            .ok()
+    })
+    .expect("couldn't append canvas to document body");
+
+    wasm_bindgen_futures::spawn_local(run(event_loop, window));
+}
+
+async fn run(event_loop: EventLoop<()>, window: winit::window::Window) {
+    let instance = wgpu::Instance::new(wgpu::Backends::all());
     let surface = unsafe { instance.create_surface(&window) };
     let adapter =
-        futures::executor::block_on(instance.request_adapter(&Default::default())).unwrap();
-    let (device, queue) =
-        futures::executor::block_on(adapter.request_device(&Default::default(), None)).unwrap();
+        instance.request_adapter(&Default::default()).await.unwrap();
+    let (device, queue) = 
+        adapter.request_device(&wgpu::DeviceDescriptor {
+            label: None,
+            features: wgpu::Features::empty(),
+            // Make sure we use the texture resolution limits from the adapter, so we can support images the size of the swapchain.
+            limits: wgpu::Limits::downlevel_webgl2_defaults()
+                .using_resolution(adapter.limits()),
+        }, None).await.unwrap();
     let swapchain_format = surface
         .get_preferred_format(&adapter)
         .unwrap_or(wgpu::TextureFormat::Bgra8UnormSrgb);
