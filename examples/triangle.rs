@@ -1,5 +1,6 @@
 use smaa::*;
 use std::borrow::Cow;
+use wgpu::{ColorTargetState, ColorWrites};
 use winit::event_loop::EventLoop;
 use winit::{
     event::{Event, WindowEvent},
@@ -10,21 +11,19 @@ fn main() {
     // Initialize wgpu
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = winit::window::Window::new(&event_loop).unwrap();
-    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
+    let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
     let surface = unsafe { instance.create_surface(&window) };
     let adapter =
         futures::executor::block_on(instance.request_adapter(&Default::default())).unwrap();
     let (device, queue) =
         futures::executor::block_on(adapter.request_device(&Default::default(), None)).unwrap();
-    let swapchain_format = surface
-        .get_preferred_format(&adapter)
-        .unwrap_or(wgpu::TextureFormat::Bgra8UnormSrgb);
+    let swapchain_format = surface.get_supported_formats(&adapter)[0];
     let mut config = wgpu::SurfaceConfiguration {
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
         format: swapchain_format,
         width: window.inner_size().width,
         height: window.inner_size().height,
-        present_mode: wgpu::PresentMode::Mailbox,
+        present_mode: wgpu::PresentMode::Fifo,
     };
     surface.configure(&device, &config);
 
@@ -39,7 +38,7 @@ fn main() {
     );
 
     // Prepare scene
-    let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: None,
         source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!("shader.wgsl"))),
     });
@@ -59,7 +58,11 @@ fn main() {
         fragment: Some(wgpu::FragmentState {
             module: &shader,
             entry_point: "fs_main",
-            targets: &[swapchain_format.into()],
+            targets: &[Some(ColorTargetState {
+                format: swapchain_format,
+                blend: None,
+                write_mask: ColorWrites::all(),
+            })],
         }),
         primitive: wgpu::PrimitiveState::default(),
         depth_stencil: None,
@@ -91,14 +94,14 @@ fn main() {
                 {
                     let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                         label: None,
-                        color_attachments: &[wgpu::RenderPassColorAttachment {
+                        color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                             view: &*smaa_frame,
                             resolve_target: None,
                             ops: wgpu::Operations {
                                 load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
                                 store: true,
                             },
-                        }],
+                        })],
                         depth_stencil_attachment: None,
                     });
                     rpass.set_pipeline(&render_pipeline);

@@ -190,7 +190,7 @@ impl ShaderSource {
         stage: ShaderStage,
         name: &'static str,
     ) -> wgpu::ShaderModule {
-        device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+        device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some(name),
             source: wgpu::ShaderSource::Glsl {
                 shader: self.get_stage(stage).into(),
@@ -200,7 +200,7 @@ impl ShaderSource {
                     naga::ShaderStage::Fragment
                 },
                 defines: FastHashMap::default(),
-            }
+            },
         })
     }
 }

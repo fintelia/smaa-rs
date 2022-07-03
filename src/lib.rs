@@ -276,14 +276,14 @@ impl Pipelines {
                 "smaa.shader.edge_detect.frag",
             ),
             entry_point: "main",
-            targets: &[wgpu::ColorTargetState {
+            targets: &[Some(wgpu::ColorTargetState {
                 format: wgpu::TextureFormat::Rg8Unorm,
                 blend: Some(wgpu::BlendState {
                     color: wgpu::BlendComponent::REPLACE,
                     alpha: wgpu::BlendComponent::REPLACE,
                 }),
                 write_mask: wgpu::ColorWrites::ALL,
-            }],
+            })],
         };
         let edge_detect = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("smaa.pipeline.edge_detect"),
@@ -317,14 +317,14 @@ impl Pipelines {
                 "smaa.shader.blending_weight.frag",
             ),
             entry_point: "main",
-            targets: &[wgpu::ColorTargetState {
+            targets: &[Some(wgpu::ColorTargetState {
                 format: wgpu::TextureFormat::Rgba8Unorm,
                 blend: Some(wgpu::BlendState {
                     color: wgpu::BlendComponent::REPLACE,
                     alpha: wgpu::BlendComponent::REPLACE,
                 }),
                 write_mask: wgpu::ColorWrites::ALL,
-            }],
+            })],
         };
         let blend_weight = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("smaa.pipeline.blend_weight"),
@@ -359,14 +359,14 @@ impl Pipelines {
                 "smaa.shader.neighborhood_blending.frag",
             ),
             entry_point: "main",
-            targets: &[wgpu::ColorTargetState {
+            targets: &[Some(wgpu::ColorTargetState {
                 format,
                 blend: Some(wgpu::BlendState {
                     color: wgpu::BlendComponent::REPLACE,
                     alpha: wgpu::BlendComponent::REPLACE,
                 }),
                 write_mask: wgpu::ColorWrites::ALL,
-            }],
+            })],
         };
         let neighborhood_blending =
             device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -717,14 +717,14 @@ impl<'a> Drop for SmaaFrame<'a> {
                 });
             {
                 let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                    color_attachments: &[wgpu::RenderPassColorAttachment {
+                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                         view: &inner.targets.edges_target,
                         resolve_target: None,
                         ops: wgpu::Operations {
                             load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                             store: true,
                         },
-                    }],
+                    })],
                     depth_stencil_attachment: None,
                     label: Some("smaa.render_pass.edge_detect"),
                 });
@@ -734,14 +734,14 @@ impl<'a> Drop for SmaaFrame<'a> {
             }
             {
                 let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                    color_attachments: &[wgpu::RenderPassColorAttachment {
+                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                         view: &inner.targets.blend_target,
                         resolve_target: None,
                         ops: wgpu::Operations {
                             load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                             store: true,
                         },
-                    }],
+                    })],
                     depth_stencil_attachment: None,
                     label: Some("smaa.render_pass.blend_weight"),
                 });
@@ -751,14 +751,14 @@ impl<'a> Drop for SmaaFrame<'a> {
             }
             {
                 let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                    color_attachments: &[wgpu::RenderPassColorAttachment {
+                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                         view: self.output_view,
                         resolve_target: None,
                         ops: wgpu::Operations {
                             load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                             store: true,
                         },
-                    }],
+                    })],
                     depth_stencil_attachment: None,
                     label: Some("smaa.render_pass.neighborhood_blending"),
                 });
