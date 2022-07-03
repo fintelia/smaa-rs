@@ -16,8 +16,7 @@
 //! let surface = unsafe { instance.create_surface(&window) };
 //! let adapter = instance.request_adapter(&Default::default()).await.unwrap();
 //! let (device, queue) = adapter.request_device(&Default::default(), None).await?;
-//! let swapchain_format = surface.get_preferred_format(&adapter)
-//!     .unwrap_or(wgpu::TextureFormat::Bgra8UnormSrgb);
+//! let swapchain_format = surface.get_supported_formats(&adapter)[0];
 //! let mut config = wgpu::SurfaceConfiguration {
 //!     usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
 //!     format: swapchain_format,
