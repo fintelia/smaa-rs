@@ -1,6 +1,6 @@
 [package]
 name = "smaa"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Jonathan Behrens <fintelia@gmail.com>"]
 description = "A library for post process antialiasing using SMAA"
 repository = "https://github.com/fintelia/gfx_smaa"
