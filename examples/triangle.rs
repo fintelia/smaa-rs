@@ -11,7 +11,7 @@ fn main() {
     // Initialize wgpu
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = winit::window::Window::new(&event_loop).unwrap();
-    let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
+    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
     let surface = unsafe { instance.create_surface(&window) };
     let adapter =
         futures::executor::block_on(instance.request_adapter(&Default::default())).unwrap();
