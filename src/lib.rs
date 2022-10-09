@@ -23,6 +23,7 @@
 //!     width: window.inner_size().width,
 //!     height: window.inner_size().height,
 //!     present_mode: wgpu::PresentMode::Mailbox,
+//!     alpha_mode: wgpu::CompositeAlphaMode::Opaque,
 //! };
 //! surface.configure(&device, &config);
 //!
