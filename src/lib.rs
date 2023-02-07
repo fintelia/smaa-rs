@@ -12,18 +12,28 @@
 //! // Initialize wgpu
 //! let event_loop = EventLoop::new();
 //! let window = winit::window::Window::new(&event_loop).unwrap();
-//! let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
-//! let surface = unsafe { instance.create_surface(&window) };
+//! let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+//!     backends: wgpu::Backends::PRIMARY,
+//!     dx12_shader_compiler: wgpu::Dx12Compiler::default(),
+//! });
+//! let surface = unsafe {
+//!     instance
+//!         .create_surface(&window)
+//!         .expect("Failed to create wgpu surface")
+//! };
 //! let adapter = instance.request_adapter(&Default::default()).await.unwrap();
 //! let (device, queue) = adapter.request_device(&Default::default(), None).await?;
-//! let swapchain_format = surface.get_supported_formats(&adapter)[0];
+//! let caps = surface.get_capabilities(&adapter);
+//! let formats = caps.formats;
+//! let swapchain_format = *formats.get(0).expect("No supported formats for surface");
 //! let mut config = wgpu::SurfaceConfiguration {
 //!     usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
 //!     format: swapchain_format,
 //!     width: window.inner_size().width,
 //!     height: window.inner_size().height,
-//!     present_mode: wgpu::PresentMode::Mailbox,
+//!     present_mode: wgpu::PresentMode::Fifo,
 //!     alpha_mode: wgpu::CompositeAlphaMode::Opaque,
+//!     view_formats: vec![],
 //! };
 //! surface.configure(&device, &config);
 //!
