@@ -407,6 +407,7 @@ impl Targets {
             format: wgpu::TextureFormat::Rgba8Unorm,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
             label: None,
+            view_formats: &[],
         };
 
         let mut uniform_data = Vec::new();
@@ -475,6 +476,7 @@ impl Resources {
                 dimension: wgpu::TextureDimension::D2,
                 format: wgpu::TextureFormat::Rg8Unorm,
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                view_formats: &[],
             },
             &AREATEX_BYTES,
         );
@@ -493,6 +495,7 @@ impl Resources {
                 dimension: wgpu::TextureDimension::D2,
                 format: wgpu::TextureFormat::R8Unorm,
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                view_formats: &[],
             },
             &SEARCHTEX_BYTES,
         );
@@ -618,7 +621,6 @@ struct SmaaTargetInner {
     resources: Resources,
     targets: Targets,
     bind_groups: BindGroups,
-
     format: wgpu::TextureFormat,
 }
 

@@ -11,13 +11,26 @@ fn main() {
     // Initialize wgpu
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = winit::window::Window::new(&event_loop).unwrap();
-    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
-    let surface = unsafe { instance.create_surface(&window) };
+    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+        backends: wgpu::Backends::PRIMARY,
+        dx12_shader_compiler: wgpu::Dx12Compiler::default(),
+    });
+    let surface = unsafe {
+        instance
+            .create_surface(&window)
+            .expect("Failed to create wgpu surface")
+    };
     let adapter =
         futures::executor::block_on(instance.request_adapter(&Default::default())).unwrap();
     let (device, queue) =
         futures::executor::block_on(adapter.request_device(&Default::default(), None)).unwrap();
-    let swapchain_format = surface.get_supported_formats(&adapter)[0];
+    let caps = surface.get_capabilities(&adapter);
+    let formats = caps.formats;
+    let swapchain_format = *formats.get(0).expect("No supported formats for surface");
+    let mut view_formats = vec![];
+    if swapchain_format.describe().srgb == false {
+        view_formats.push(swapchain_format.add_srgb_suffix());
+    }
     let mut config = wgpu::SurfaceConfiguration {
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
         format: swapchain_format,
@@ -25,6 +38,7 @@ fn main() {
         height: window.inner_size().height,
         present_mode: wgpu::PresentMode::Fifo,
         alpha_mode: wgpu::CompositeAlphaMode::Opaque,
+        view_formats: view_formats.clone(),
     };
     surface.configure(&device, &config);
 
