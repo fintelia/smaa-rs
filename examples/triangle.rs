@@ -11,20 +11,21 @@ fn main() {
     // Initialize wgpu
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = winit::window::Window::new(&event_loop).unwrap();
-    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
-    let surface = unsafe { instance.create_surface(&window) };
+    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
+    let surface = unsafe { instance.create_surface(&window).unwrap() };
     let adapter =
         futures::executor::block_on(instance.request_adapter(&Default::default())).unwrap();
     let (device, queue) =
         futures::executor::block_on(adapter.request_device(&Default::default(), None)).unwrap();
-    let swapchain_format = surface.get_supported_formats(&adapter)[0];
+    let swapchain_format = surface.get_capabilities(&adapter).formats[0];
     let mut config = wgpu::SurfaceConfiguration {
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
         format: swapchain_format,
         width: window.inner_size().width,
         height: window.inner_size().height,
-        present_mode: wgpu::PresentMode::Fifo,
+        present_mode: wgpu::PresentMode::AutoVsync,
         alpha_mode: wgpu::CompositeAlphaMode::Opaque,
+        view_formats: vec![],
     };
     surface.configure(&device, &config);
 

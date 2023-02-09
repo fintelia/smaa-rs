@@ -12,18 +12,19 @@
 //! // Initialize wgpu
 //! let event_loop = EventLoop::new();
 //! let window = winit::window::Window::new(&event_loop).unwrap();
-//! let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
-//! let surface = unsafe { instance.create_surface(&window) };
+//! let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
+//! let surface = unsafe { instance.create_surface(&window).unwrap() };
 //! let adapter = instance.request_adapter(&Default::default()).await.unwrap();
 //! let (device, queue) = adapter.request_device(&Default::default(), None).await?;
-//! let swapchain_format = surface.get_supported_formats(&adapter)[0];
+//! let swapchain_format = surface.get_capabilities(&adapter).formats[0];
 //! let mut config = wgpu::SurfaceConfiguration {
 //!     usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
 //!     format: swapchain_format,
 //!     width: window.inner_size().width,
 //!     height: window.inner_size().height,
-//!     present_mode: wgpu::PresentMode::Mailbox,
+//!     present_mode: wgpu::PresentMode::AutoVsync,
 //!     alpha_mode: wgpu::CompositeAlphaMode::Opaque,
+//!     view_formats: vec![],
 //! };
 //! surface.configure(&device, &config);
 //!
@@ -407,6 +408,7 @@ impl Targets {
             format: wgpu::TextureFormat::Rgba8Unorm,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
             label: None,
+            view_formats: &[],
         };
 
         let mut uniform_data = Vec::new();
@@ -475,6 +477,7 @@ impl Resources {
                 dimension: wgpu::TextureDimension::D2,
                 format: wgpu::TextureFormat::Rg8Unorm,
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                view_formats: &[],
             },
             &AREATEX_BYTES,
         );
@@ -493,6 +496,7 @@ impl Resources {
                 dimension: wgpu::TextureDimension::D2,
                 format: wgpu::TextureFormat::R8Unorm,
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                view_formats: &[],
             },
             &SEARCHTEX_BYTES,
         );
@@ -618,7 +622,6 @@ struct SmaaTargetInner {
     resources: Resources,
     targets: Targets,
     bind_groups: BindGroups,
-
     format: wgpu::TextureFormat,
 }
 
