@@ -464,7 +464,7 @@ impl Targets {
 impl Resources {
     fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
         let area_texture = device.create_texture_with_data(
-            &queue,
+            queue,
             &wgpu::TextureDescriptor {
                 label: Some("smaa.texture.area"),
                 size: wgpu::Extent3d {
@@ -483,7 +483,7 @@ impl Resources {
         );
 
         let search_texture = device.create_texture_with_data(
-            &queue,
+            queue,
             &wgpu::TextureDescriptor {
                 label: Some("smaa.texture.search"),
                 size: wgpu::Extent3d {
@@ -725,11 +725,13 @@ impl<'a> Drop for SmaaFrame<'a> {
                         resolve_target: None,
                         ops: wgpu::Operations {
                             load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                            store: true,
+                            store: wgpu::StoreOp::Store,
                         },
                     })],
                     depth_stencil_attachment: None,
                     label: Some("smaa.render_pass.edge_detect"),
+                    occlusion_query_set: None,
+                    timestamp_writes: None,
                 });
                 rpass.set_pipeline(&inner.pipelines.edge_detect);
                 rpass.set_bind_group(0, &inner.bind_groups.edge_detect_bind_group, &[]);
@@ -742,11 +744,13 @@ impl<'a> Drop for SmaaFrame<'a> {
                         resolve_target: None,
                         ops: wgpu::Operations {
                             load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                            store: true,
+                            store: wgpu::StoreOp::Store,
                         },
                     })],
                     depth_stencil_attachment: None,
                     label: Some("smaa.render_pass.blend_weight"),
+                    occlusion_query_set: None,
+                    timestamp_writes: None,
                 });
                 rpass.set_pipeline(&inner.pipelines.blend_weight);
                 rpass.set_bind_group(0, &inner.bind_groups.blend_weight_bind_group, &[]);
@@ -759,11 +763,13 @@ impl<'a> Drop for SmaaFrame<'a> {
                         resolve_target: None,
                         ops: wgpu::Operations {
                             load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                            store: true,
+                            store: wgpu::StoreOp::Store,
                         },
                     })],
                     depth_stencil_attachment: None,
                     label: Some("smaa.render_pass.neighborhood_blending"),
+                    occlusion_query_set: None,
+                    timestamp_writes: None,
                 });
                 rpass.set_pipeline(&inner.pipelines.neighborhood_blending);
                 rpass.set_bind_group(0, &inner.bind_groups.neighborhood_blending_bind_group, &[]);
