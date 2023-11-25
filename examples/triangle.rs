@@ -97,14 +97,16 @@ fn main() {
                     let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                         label: None,
                         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                            view: &*smaa_frame,
+                            view: &smaa_frame,
                             resolve_target: None,
                             ops: wgpu::Operations {
                                 load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
-                                store: true,
+                                store: wgpu::StoreOp::Store,
                             },
                         })],
                         depth_stencil_attachment: None,
+                        occlusion_query_set: None,
+                        timestamp_writes: None,
                     });
                     rpass.set_pipeline(&render_pipeline);
                     rpass.draw(0..3, 0..1);
