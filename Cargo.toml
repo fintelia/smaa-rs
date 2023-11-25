@@ -1,6 +1,6 @@
 [package]
 name = "smaa"
-version = "0.11.0"
+version = "0.12.0"
 authors = ["Jonathan Behrens <fintelia@gmail.com>"]
 description = "A library for post process antialiasing using SMAA"
 repository = "https://github.com/fintelia/smaa-rs"
@@ -8,6 +8,7 @@ keywords = ["graphics", "antialiasing", "SMAA"]
 categories = ["rendering", "game-engines"]
 license = "MIT"
 edition = "2021"
+include = ["README.md", "LICENSE", "/src", "/third_party"]
 
 [dependencies]
 wgpu = { version = "0.18", features = ["glsl"] }
