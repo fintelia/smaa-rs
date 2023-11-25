@@ -1,5 +1,3 @@
-use naga::FastHashMap;
-
 #[allow(dead_code)]
 pub enum ShaderQuality {
     Low,
@@ -195,11 +193,11 @@ impl ShaderSource {
             source: wgpu::ShaderSource::Glsl {
                 shader: self.get_stage(stage).into(),
                 stage: if stage.is_vertex_shader() {
-                    naga::ShaderStage::Vertex
+                    wgpu::naga::ShaderStage::Vertex
                 } else {
-                    naga::ShaderStage::Fragment
+                    wgpu::naga::ShaderStage::Fragment
                 },
-                defines: FastHashMap::default(),
+                defines: Default::default(),
             },
         })
     }

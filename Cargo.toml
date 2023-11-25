@@ -10,7 +10,6 @@ license = "MIT"
 edition = "2021"
 
 [dependencies]
-naga = "0.14"
 wgpu = { version = "0.18", features = ["glsl"] }
 
 [dev-dependencies]
