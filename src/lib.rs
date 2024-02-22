@@ -3,28 +3,33 @@
 //! # Example
 //!
 //! ```
+//! # use std::sync::Arc;
 //! # use smaa::{SmaaMode, SmaaTarget};
-//! # use winit::event::Event;
+//! # use winit::event::{Event, WindowEvent};
 //! # use winit::event_loop::EventLoop;
 //! # use winit::window::Window;
+//! # use winit::error::EventLoopError;
 //! # fn main() { futures::executor::block_on(run()); }
 //! # async fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! // Initialize wgpu
-//! let event_loop = EventLoop::new();
+//! let event_loop = EventLoop::new().unwrap();
 //! let window = winit::window::Window::new(&event_loop).unwrap();
+//! let window_size = window.inner_size();
+//! let window_arc = Arc::new(window);
 //! let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
-//! let surface = unsafe { instance.create_surface(&window).unwrap() };
+//! let surface = instance.create_surface(window_arc.clone()).unwrap();
 //! let adapter = instance.request_adapter(&Default::default()).await.unwrap();
 //! let (device, queue) = adapter.request_device(&Default::default(), None).await?;
 //! let swapchain_format = surface.get_capabilities(&adapter).formats[0];
 //! let mut config = wgpu::SurfaceConfiguration {
 //!     usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
 //!     format: swapchain_format,
-//!     width: window.inner_size().width,
-//!     height: window.inner_size().height,
+//!     width: window_size.width,
+//!     height: window_size.height,
 //!     present_mode: wgpu::PresentMode::AutoVsync,
 //!     alpha_mode: wgpu::CompositeAlphaMode::Opaque,
 //!     view_formats: vec![],
+//!     desired_maximum_frame_latency: 2,
 //! };
 //! surface.configure(&device, &config);
 //!
@@ -32,30 +37,32 @@
 //! let mut smaa_target = SmaaTarget::new(
 //!     &device,
 //!     &queue,
-//!     window.inner_size().width,
-//!     window.inner_size().height,
+//!     window_size.width,
+//!     window_size.height,
 //!     swapchain_format,
 //!     SmaaMode::Smaa1X,
 //! );
 //!
 //! // Main loop
-//! event_loop.run(move |event, _, control_flow| {
-//! #    *control_flow = winit::event_loop::ControlFlow::Exit;
-//!     match event {
-//!         Event::RedrawRequested(_) => {
-//!             let output_frame = surface.get_current_texture().unwrap();
-//!             let output_view = output_frame.texture.create_view(&Default::default());
-//!             let smaa_frame = smaa_target.start_frame(&device, &queue, &output_view);
+//! Ok(event_loop.run(move |event, event_loop| {
+//!   if let Event::WindowEvent { event, .. } = event {
+//!         match event {
+//!             WindowEvent::RedrawRequested => {
+//!                 let output_frame = surface.get_current_texture().unwrap();
+//!                 let output_view = output_frame.texture.create_view(&Default::default());
+//!                 let smaa_frame = smaa_target.start_frame(&device, &queue, &output_view);
 //!
-//!             // Render the scene into `*smaa_frame`.
-//!             // [...]
+//!                 // Render the scene into `*smaa_frame`.
+//!                 // [...]
 //!
-//!             smaa_frame.resolve();
-//!             output_frame.present();
+//!                 smaa_frame.resolve();
+//!                 output_frame.present();
+//!                 # event_loop.exit();
 //!         }
 //!         _ => {}
+//!         }
 //!     }
-//! });
+//! })?)
 //! # }
 
 #![deny(missing_docs)]
