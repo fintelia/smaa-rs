@@ -479,6 +479,7 @@ impl Resources {
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
                 view_formats: &[],
             },
+            wgpu::util::TextureDataOrder::LayerMajor,
             &AREATEX_BYTES,
         );
 
@@ -498,6 +499,7 @@ impl Resources {
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
                 view_formats: &[],
             },
+            wgpu::util::TextureDataOrder::LayerMajor,
             &SEARCHTEX_BYTES,
         );
 
