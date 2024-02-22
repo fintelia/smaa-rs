@@ -27,7 +27,6 @@
  * SOFTWARE.
  */
 
-
 pub const SEARCHTEX_WIDTH: u32 = 64;
 pub const SEARCHTEX_HEIGHT: u32 = 16;
 pub const SEARCHTEX_PITCH: usize = SEARCHTEX_WIDTH as usize;

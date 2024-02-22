@@ -27,7 +27,6 @@
  * SOFTWARE.
  */
 
-
 pub const AREATEX_WIDTH: u32 = 160;
 pub const AREATEX_HEIGHT: u32 = 560;
 pub const AREATEX_PITCH: usize = (AREATEX_WIDTH * 2) as usize;
