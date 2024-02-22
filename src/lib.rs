@@ -44,25 +44,27 @@
 //! );
 //!
 //! // Main loop
-//! Ok(event_loop.run(move |event, event_loop| {
-//!   if let Event::WindowEvent { event, .. } = event {
+//! # Ok(
+//! event_loop.run(move |event, event_loop| {
+//!     if let Event::WindowEvent { event, .. } = event {
 //!         match event {
 //!             WindowEvent::RedrawRequested => {
 //!                 let output_frame = surface.get_current_texture().unwrap();
 //!                 let output_view = output_frame.texture.create_view(&Default::default());
 //!                 let smaa_frame = smaa_target.start_frame(&device, &queue, &output_view);
-//!
+//! 
 //!                 // Render the scene into `*smaa_frame`.
 //!                 // [...]
-//!
+//! 
 //!                 smaa_frame.resolve();
 //!                 output_frame.present();
 //!                 # event_loop.exit();
-//!         }
-//!         _ => {}
+//!             }
+//!             _ => {}
 //!         }
 //!     }
-//! })?)
+//! })
+//! # ?)
 //! # }
 
 #![deny(missing_docs)]
