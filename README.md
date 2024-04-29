@@ -33,6 +33,6 @@ event_loop.run(move |event, event_loop| {
             _ => {}
         }
     }
-})
+});
 
 ```
