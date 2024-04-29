@@ -52,10 +52,10 @@
 //!                 let output_frame = surface.get_current_texture().unwrap();
 //!                 let output_view = output_frame.texture.create_view(&Default::default());
 //!                 let smaa_frame = smaa_target.start_frame(&device, &queue, &output_view);
-//! 
+//!
 //!                 // Render the scene into `*smaa_frame`.
 //!                 // [...]
-//! 
+//!
 //!                 smaa_frame.resolve();
 //!                 output_frame.present();
 //!                 # event_loop.exit();
@@ -278,6 +278,7 @@ impl Pipelines {
             ),
             entry_point: "main",
             buffers: &[],
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
         };
         let edge_detect_shader_frag = wgpu::FragmentState {
             module: &source.get_shader(
@@ -294,6 +295,7 @@ impl Pipelines {
                 }),
                 write_mask: wgpu::ColorWrites::ALL,
             })],
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
         };
         let edge_detect = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("smaa.pipeline.edge_detect"),
@@ -319,6 +321,7 @@ impl Pipelines {
             ),
             entry_point: "main",
             buffers: &[],
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
         };
         let blend_weight_shader_frag = wgpu::FragmentState {
             module: &source.get_shader(
@@ -335,6 +338,7 @@ impl Pipelines {
                 }),
                 write_mask: wgpu::ColorWrites::ALL,
             })],
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
         };
         let blend_weight = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("smaa.pipeline.blend_weight"),
@@ -361,6 +365,7 @@ impl Pipelines {
             ),
             entry_point: "main",
             buffers: &[],
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
         };
         let neighborhood_blending_frag = wgpu::FragmentState {
             module: &source.get_shader(
@@ -377,6 +382,7 @@ impl Pipelines {
                 }),
                 write_mask: wgpu::ColorWrites::ALL,
             })],
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
         };
         let neighborhood_blending =
             device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
