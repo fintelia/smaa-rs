@@ -57,6 +57,7 @@ fn main() {
             module: &shader,
             entry_point: "vs_main",
             buffers: &[],
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
         },
         fragment: Some(wgpu::FragmentState {
             module: &shader,
@@ -66,6 +67,7 @@ fn main() {
                 blend: None,
                 write_mask: ColorWrites::all(),
             })],
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
         }),
         primitive: wgpu::PrimitiveState::default(),
         depth_stencil: None,

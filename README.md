@@ -16,20 +16,22 @@ let mut smaa_target = SmaaTarget::new(
 );
 
 // Main loop
-event_loop.run(move |event, _, control_flow| {
-    match event {
-        Event::RedrawRequested(_) => {
-            let output_frame = surface.get_current_texture().unwrap();
-            let output_view = output_frame.texture.create_view(&Default::default());
-            let smaa_frame = smaa_target.start_frame(&device, &queue, &output_view);
+event_loop.run(move |event, event_loop| {
+    if let Event::WindowEvent { event, .. } = event {
+        match event {
+            WindowEvent::RedrawRequested => {
+                let output_frame = surface.get_current_texture().unwrap();
+                let output_view = output_frame.texture.create_view(&Default::default());
+                let smaa_frame = smaa_target.start_frame(&device, &queue, &output_view);
 
-            // Render the scene into `*smaa_frame`.
-            // [...]
+                // Render the scene into `*smaa_frame`.
+                // [...]
 
-            smaa_frame.resolve();
-            output_frame.present();
+                smaa_frame.resolve();
+                output_frame.present();
+            }
+            _ => {}
         }
-        _ => {}
     }
 });
 
