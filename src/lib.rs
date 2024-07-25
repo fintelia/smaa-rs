@@ -306,6 +306,7 @@ impl Pipelines {
             multisample: Default::default(),
             depth_stencil: None,
             multiview: None,
+            cache: None
         });
 
         let blend_weight_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -349,6 +350,7 @@ impl Pipelines {
             multisample: Default::default(),
             depth_stencil: None,
             multiview: None,
+            cache: None
         });
 
         let neighborhood_blending_layout =
@@ -394,6 +396,7 @@ impl Pipelines {
                 multisample: Default::default(),
                 depth_stencil: None,
                 multiview: None,
+                cache: None
             });
 
         Self {
