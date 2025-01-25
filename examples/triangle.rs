@@ -11,7 +11,7 @@ fn main() {
     let window = winit::window::Window::new(&event_loop).unwrap();
     let window_size = window.inner_size();
     let window_arc = Arc::new(window);
-    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
+    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
     let surface = instance.create_surface(window_arc.clone()).unwrap();
     let adapter =
         futures::executor::block_on(instance.request_adapter(&Default::default())).unwrap();
@@ -55,13 +55,13 @@ fn main() {
         layout: Some(&pipeline_layout),
         vertex: wgpu::VertexState {
             module: &shader,
-            entry_point: "vs_main",
+            entry_point: Some("vs_main"),
             buffers: &[],
             compilation_options: wgpu::PipelineCompilationOptions::default(),
         },
         fragment: Some(wgpu::FragmentState {
             module: &shader,
-            entry_point: "fs_main",
+            entry_point: Some("fs_main"),
             targets: &[Some(ColorTargetState {
                 format: swapchain_format,
                 blend: None,

@@ -276,7 +276,7 @@ impl Pipelines {
                 ShaderStage::EdgeDetectionVS,
                 "smaa.shader.edge_detect.vert",
             ),
-            entry_point: "main",
+            entry_point: Some("main"),
             buffers: &[],
             compilation_options: wgpu::PipelineCompilationOptions::default(),
         };
@@ -286,7 +286,7 @@ impl Pipelines {
                 ShaderStage::LumaEdgeDetectionPS,
                 "smaa.shader.edge_detect.frag",
             ),
-            entry_point: "main",
+            entry_point: Some("main"),
             targets: &[Some(wgpu::ColorTargetState {
                 format: wgpu::TextureFormat::Rg8Unorm,
                 blend: Some(wgpu::BlendState {
@@ -320,7 +320,7 @@ impl Pipelines {
                 ShaderStage::BlendingWeightVS,
                 "smaa.shader.blending_weight.vert",
             ),
-            entry_point: "main",
+            entry_point: Some("main"),
             buffers: &[],
             compilation_options: wgpu::PipelineCompilationOptions::default(),
         };
@@ -330,7 +330,7 @@ impl Pipelines {
                 ShaderStage::BlendingWeightPS,
                 "smaa.shader.blending_weight.frag",
             ),
-            entry_point: "main",
+            entry_point: Some("main"),
             targets: &[Some(wgpu::ColorTargetState {
                 format: wgpu::TextureFormat::Rgba8Unorm,
                 blend: Some(wgpu::BlendState {
@@ -365,7 +365,7 @@ impl Pipelines {
                 ShaderStage::NeighborhoodBlendingVS,
                 "smaa.shader.neighborhood_blending.vert",
             ),
-            entry_point: "main",
+            entry_point: Some("main"),
             buffers: &[],
             compilation_options: wgpu::PipelineCompilationOptions::default(),
         };
@@ -375,7 +375,7 @@ impl Pipelines {
                 ShaderStage::NeighborhoodBlendingPS,
                 "smaa.shader.neighborhood_blending.frag",
             ),
-            entry_point: "main",
+            entry_point: Some("main"),
             targets: &[Some(wgpu::ColorTargetState {
                 format,
                 blend: Some(wgpu::BlendState {
