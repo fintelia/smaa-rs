@@ -16,7 +16,7 @@
 //! let window = winit::window::Window::new(&event_loop).unwrap();
 //! let window_size = window.inner_size();
 //! let window_arc = Arc::new(window);
-//! let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
+//! let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
 //! let surface = instance.create_surface(window_arc.clone()).unwrap();
 //! let adapter = instance.request_adapter(&Default::default()).await.unwrap();
 //! let (device, queue) = adapter.request_device(&Default::default(), None).await?;
