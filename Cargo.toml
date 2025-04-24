@@ -11,7 +11,7 @@ edition = "2021"
 include = ["README.md", "LICENSE", "/src", "/third_party"]
 
 [dependencies]
-wgpu = { version = "24.0.0", features = ["glsl"] }
+wgpu = { version = "25.0.0", features = ["glsl"] }
 
 [dev-dependencies]
 winit = "0.29"
