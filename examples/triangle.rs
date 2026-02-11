@@ -48,7 +48,7 @@ fn main() {
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
         bind_group_layouts: &[],
-        push_constant_ranges: &[],
+        immediate_size: 0,
     });
     let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
@@ -72,7 +72,7 @@ fn main() {
         primitive: wgpu::PrimitiveState::default(),
         depth_stencil: None,
         multisample: wgpu::MultisampleState::default(),
-        multiview: None,
+        multiview_mask: None,
         cache: None
     });
 
@@ -109,6 +109,7 @@ fn main() {
                             depth_stencil_attachment: None,
                             occlusion_query_set: None,
                             timestamp_writes: None,
+                            multiview_mask: None,
                         });
                         rpass.set_pipeline(&render_pipeline);
                         rpass.draw(0..3, 0..1);
