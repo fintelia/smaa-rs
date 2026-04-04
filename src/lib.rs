@@ -16,7 +16,9 @@
 //! let window = winit::window::Window::new(&event_loop).unwrap();
 //! let window_size = window.inner_size();
 //! let window_arc = Arc::new(window);
-//! let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
+//! let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_with_display_handle(
+//!     Box::new(window_arc.clone()),
+//! ));
 //! let surface = instance.create_surface(window_arc.clone()).unwrap();
 //! let adapter = instance.request_adapter(&Default::default()).await.unwrap();
 //! let (device, queue) = adapter.request_device(&Default::default()).await?;
@@ -49,7 +51,9 @@
 //!     if let Event::WindowEvent { event, .. } = event {
 //!         match event {
 //!             WindowEvent::RedrawRequested => {
-//!                 let output_frame = surface.get_current_texture().unwrap();
+//!                 let wgpu::CurrentSurfaceTexture::Success(output_frame) = surface.get_current_texture() else {
+//!                     todo!();
+//!                 };
 //!                 let output_view = output_frame.texture.create_view(&Default::default());
 //!                 let smaa_frame = smaa_target.start_frame(&device, &queue, &output_view);
 //!
