@@ -267,7 +267,7 @@ impl Pipelines {
 
         let edge_detect_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("smaa.pipeline_layout.edge_detect"),
-            bind_group_layouts: &[&layouts.edge_detect_bind_group_layout],
+            bind_group_layouts: &[Some(&layouts.edge_detect_bind_group_layout)],
             immediate_size: 0,
         });
         let edge_detect_shader_vert = wgpu::VertexState {
@@ -306,12 +306,12 @@ impl Pipelines {
             multisample: Default::default(),
             depth_stencil: None,
             multiview_mask: None,
-            cache: None
+            cache: None,
         });
 
         let blend_weight_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("smaa.pipeline_layout.blend_weight"),
-            bind_group_layouts: &[&layouts.blend_weight_bind_group_layout],
+            bind_group_layouts: &[Some(&layouts.blend_weight_bind_group_layout)],
             immediate_size: 0,
         });
         let blend_weight_shader_vert = wgpu::VertexState {
@@ -350,13 +350,13 @@ impl Pipelines {
             multisample: Default::default(),
             depth_stencil: None,
             multiview_mask: None,
-            cache: None
+            cache: None,
         });
 
         let neighborhood_blending_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("smaa.pipeline_layout.neighborhood_blending"),
-                bind_group_layouts: &[&layouts.neighborhood_blending_bind_group_layout],
+                bind_group_layouts: &[Some(&layouts.neighborhood_blending_bind_group_layout)],
                 immediate_size: 0,
             });
         let neighborhood_blending_vert = wgpu::VertexState {
@@ -396,7 +396,7 @@ impl Pipelines {
                 multisample: Default::default(),
                 depth_stencil: None,
                 multiview_mask: None,
-                cache: None
+                cache: None,
             });
 
         Self {
