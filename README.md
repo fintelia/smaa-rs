@@ -1,3 +1,5 @@
+**This project has migrated to Codeberg: https://codeberg.org/fintelia/smaa-rs**
+---
 # smaa-rs [![crates.io](https://img.shields.io/crates/v/smaa.svg)](https://crates.io/crates/smaa) [![docs.rs](https://docs.rs/smaa/badge.svg)](https://docs.rs/smaa)
 
 Post-process antialiasing for wgpu-rs, relying on the [SMAA reference implementation](https://github.com/iryoku/smaa).
